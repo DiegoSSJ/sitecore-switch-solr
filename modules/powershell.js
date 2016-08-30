@@ -29,10 +29,12 @@ Powershell.prototype.runAsync = function (pathToScriptFile, parameters, callback
   child.stdin.end();
 }
 
+
+/* https://nodejs.org/api/child_process.html */
 Powershell.prototype.runSync = function (pathToScriptFile, parameters, cwd, callback) {
   console.log("Powershell - running: " + pathToScriptFile + " with parameters: " + parameters + " on directory: " + cwd);
   var spawn = require("child_process").spawnSync;
-  var child = spawn("powershell.exe", [pathToScriptFile, parameters], { cwd: cwd, stdio: 'inherit' });
+  var child = spawn("powershell.exe", [pathToScriptFile, parameters], { cwd: cwd, stdio: 'inherit' }); /* Ref: https://nodejs.org/api/console.html */
   return child.status;
 }
 
