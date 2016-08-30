@@ -47,7 +47,10 @@ The gulp tasks expects two parameters in the solution-config.json file. These pa
 {
   "configs": [
     {
+      "name": "Debug",
+      "rootFolder": "c:\\websites\\Your.Website",
       "websiteRoot": "c:\\websites\\Your.Website\\Website",
+      "hostName": "Your.Website",
       "solrExtractLocation":  "C:\\"
     }
   ]
