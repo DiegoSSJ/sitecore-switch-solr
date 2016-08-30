@@ -4,22 +4,43 @@
 	[Parameter(Mandatory=$true)]
     [string]$webRootPath)
 
-$solrServiceName="LiUSitecoreSolr"
 
-$solrVersionName="4.10.4"
-$solrExtractLocation="D:\"
+if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
+{
+    Write-Host "Parameter $solrExtractLocation is mandatory, but it is null or empty"
+    exit 1
+}
+
+
+if ($webRootPath -eq $null -or $webRootPath -eq "")
+{
+    Write-Host "Parameter webRootPath is mandatory, but it is null or empty"
+    exit 1
+}
+
+# Ex.
+#$solrExtractLocation="D:\"
+#$webRootPath="C:\websites\LiU.local-solr\Website"
+
+
+# Constant parameters
+$solrServiceName="LiUSitecoreSolr"
+# We don't let this be a parameter since the article this is based on explicitly explains there are problems with other (newer) Solr versions.
+# Until or if those problems are addressed in these scripts, then we could accept this as parameter (with validation of correct version).
+$solrVersionName="4.10.4"                                
+                                                         
 
 $solrExtractFolder="solr-$solrVersionName"
 $solrCoresPath="$solrExtractLocation\$solrExtractFolder\example\solr"
 $serviceStopWaitTime=5
 
-$filesLocation="..\files
+$filesLocation="..\files"
 $solrCleanCores="$filesLocation\Clean SOLR cores 4.10.zip"
 $microsoftUnityDll="$filesLocation\\Microsoft.Practices.Unity.dll"
 $globalAsax="$filesLocation\Global.asax"
 $sitecoreSolrDllsPackageName="$filesLocation\Sitecore.Solr.Support 1.0.0 rev. 160504.zip"
 
-$webRootPath="C:\websites\LiU.local-solr\Website"
+
 $websiteAppConfigIncludeFolder="$webRootPath\App_Config\Include"
 
 # Copy cores
@@ -56,6 +77,7 @@ else
 }
 
 
+
 # Disable lucene config files in Sitecore App_Config/Include
 Write-Host "Disabling Lucene config files in the App_Config folder of the website"
 
@@ -83,7 +105,7 @@ else
 {
     ForEach ( $configFile in $luceneConfigFilesFound )
     {
-        $configFileDisabledName = $configFile -replace ".config",".disabledbyscript"
+        $configFileDisabledName = $configFile -replace "[.]config",".disabledbyscript"
         $configFileDisabledName = $configFileDisabledName -replace ".*\\",""
         Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileDisabledName"
         Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileDisabledName
@@ -122,6 +144,7 @@ Write-Host "Enabling Solr config files"
 # Reference - should be fixed to handle example files and keep .config?
 $solrFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*"
 $solrConfigDisabledFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.disabled"
+$solrConfigExampleFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.example"
 $solrConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config*"
 
 if($solrFilesFound.Count -eq 0)
@@ -131,25 +154,35 @@ if($solrFilesFound.Count -eq 0)
 }
 
 
-if($solrConfigDisabledFilesFound.Count -eq 0)
+if($solrConfigDisabledFilesFound.Count -eq 0 -and $solrConfigExampleFilesFound.Count -eq 0)
 {
-    Write-Host "No Solr disabled config files found, good, continuing"
+    Write-Host "No Solr disabled or example config files found, good, continuing"
 }
 else
 {
     ForEach ( $configFile in $solrConfigDisabledFilesFound )
     {
-        $configFileEnabledName = $configFile -replace ".config.disabled",".config"
+        $configFileEnabledName = $configFile -replace "[.]config[.]disabled",".config"
         # Renama-Item expects just the new name as second parameter, so we have to remove the relative path
         $configFileEnabledName = $configFileEnabledName -replace ".*\\",""
-        Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileDisabledName"
+        Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileEnabledName"
+        Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileEnabledName
+    }
+
+    ForEach ( $configFile in $solrConfigExampleFilesFound )
+    {
+        $configFileEnabledName = $configFile -replace "[.]example",""
+        # Rename-Item expects just the new name as second parameter, so we have to remove the relative path
+        $configFileEnabledName = $configFileEnabledName -replace ".*\\",""
+        Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileEnabledName"
         Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileEnabledName
     }
 
     $solrDisabledConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.disabled"
-    if($solrDisabledConfigFilesFound.Count -gt 0 )
+    $solrExampleConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.example"
+    if($solrDisabledConfigFilesFound.Count -gt 0  -and $solrExampleConfigFilesFound.Count -gt 0)
     {
-        Write-Host "Something went wrong enabling Solr config files, there are still some left disabled"
+        Write-Host "Something went wrong enabling Solr config files, there are still some left disabled/exampled"
         exit 1
     }
 
@@ -176,6 +209,7 @@ else
 #        ren "%%i" "%%~ni.config"
 #    )
 #)
+
 
 
 # Copy Sitecore Solr dlls
