@@ -2,7 +2,7 @@
   "author": {
     "name": "Diego Saavedra San Juan",
     "email": "diego.saavedra.san.juan@liu.se"
-  },  
+  },
   "bugs": {
     "url": "https://github.com/diegossj/sitecore-switch-solr/issues"
   },
@@ -31,7 +31,7 @@
   "keywords": [
     "sitecore",
     "gulp",
-	"solr"
+    "solr"
   ],
   "license": "ISC",
   "main": "build.js",
@@ -39,7 +39,7 @@
     {
       "name": "Diego Saavedra San Juan",
       "email": "diego.saavedra.san.juan@liu.se"
-    }    
+    }
   ],
   "name": "sitecore-switch-solr",
   "optionalDependencies": {},
@@ -52,5 +52,5 @@
   "scripts": {
     "gulp": "gulp"
   },
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
