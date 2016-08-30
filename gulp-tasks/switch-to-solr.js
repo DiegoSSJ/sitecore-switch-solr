@@ -27,4 +27,6 @@ gulp.task("switch-to-solr", function (callback) {
     build.LogEvent("builder", "Configuring Solr failed, quitting")
     process.exit()
   }
+  // TODO: Trigger index rebuild automatically
+  build.logEvent("builder", "Sitecore switch to solr completed successfully, don't forget to rebuild indexes in Sitecores control panel");
 });
