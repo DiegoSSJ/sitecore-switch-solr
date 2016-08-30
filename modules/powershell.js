@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-function Powershell () {
+function Powershell() {
 }
 
 Powershell.prototype.runAsync = function (pathToScriptFile, parameters, callback) {
@@ -11,11 +11,11 @@ Powershell.prototype.runAsync = function (pathToScriptFile, parameters, callback
 
   child.stdout.setEncoding('utf8')
   child.stderr.setEncoding('utf8')
-  
+
   child.stdout.on("data", function (data) {
     console.log(data);
   });
-  
+
   child.stderr.on("data", function (data) {
     console.log("Error: " + data);
   });
@@ -28,5 +28,13 @@ Powershell.prototype.runAsync = function (pathToScriptFile, parameters, callback
 
   child.stdin.end();
 }
+
+Powershell.prototype.runSync = function (pathToScriptFile, parameters, cwd, callback) {
+  console.log("Powershell - running: " + pathToScriptFile + " with parameters: " + parameters + " on directory: " + cwd);
+  var spawn = require("child_process").spawnSync;
+  var child = spawn("powershell.exe", [pathToScriptFile, parameters], { cwd: cwd, stdio: 'inherit' });
+  return child.status;
+}
+
 
 exports = module.exports = new Powershell();
