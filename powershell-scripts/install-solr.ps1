@@ -5,6 +5,12 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$solrExtractLocation)
 
+if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
+{
+    Write-Host "Parameter $solrExtractLocation is mandatory, but it is null or empty"
+    exit 1
+}
+
 $solrVersionName="4.10.4"
 #$solrExtractLocation="D:\"
 $solrUrl="http://archive.apache.org/dist/lucene/solr/$solrVersionName/solr-$solrVersionName.zip"
@@ -53,7 +59,7 @@ if ( -not ($isSolrServiceInstalled -eq $null))
     # Solr already installed in some way
     Write-Host "Solr is already available as a service, you probably have alread installed it"
 
-    # Check if running / Check if our Liu service?
+    # Check if running / Check if our Liu service exists?
     #$isLiUSolrServiceRunning = Get-Service -Name $solrServiceName
     #if ( $isLiUSolrServiceRunning.Status -eq "Running")
     exit 0
