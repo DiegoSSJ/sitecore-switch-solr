@@ -1,0 +1,110 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "liu-sitecore-solr-switch@^0.1",
+        "scope": null,
+        "escapedName": "liu-sitecore-solr-switch",
+        "name": "liu-sitecore-solr-switch",
+        "rawSpec": "^0.1",
+        "spec": ">=0.1 <0.0.21",
+        "type": "range"
+      },
+      "C:\\websites\\LiuSitecore"
+    ]
+  ],
+  "_from": "liu-sitecore-solr-switch@>=0.1 <0.0.21",
+  "_id": "liu-sitecore-solr-switch@0.1",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/liu-sitecore-solr-switch",
+  "_nodeVersion": "6.2.0",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/liu-sitecore-solr-switch-0.1.tgz_1467209362408_0.770718663232401"
+  },
+  "_npmUser": {
+    "name": "pentia-eok",
+    "email": "eok@pentia.dk"
+  },
+  "_npmVersion": "3.8.9",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "liu-sitecore-solr-switch@^0.1",
+    "scope": null,
+    "escapedName": "liu-sitecore-solr-switch",
+    "name": "liu-sitecore-solr-switch",
+    "rawSpec": "^0.1",
+    "spec": ">=0.1 <0.0.21",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/liu-sitecore-solr-switch/-/liu-sitecore-solr-switch-0.1.tgz",
+  "_shasum": "70191a1242bddd9a97ee5789d7f02bdfb8ce8e9a",
+  "_shrinkwrap": null,
+  "_spec": "liu-sitecore-solr-switch@^0.1",
+  "_where": "C:\\websites\\LiuSitecore",
+  "author": {
+    "name": "Diego Saavedra San Juan",
+    "email": "diego.saavedra.san.juan@liu.se"
+  },
+  "bin": {
+    "liu-sitecore-solr-switch": "./bin/liu-sitecore-solr-switch.js"
+  },
+  "bugs": {
+    "url": "https://liu-vs.visualstudio.com/Sitecore%202/_workitems?tempQueryId=84c79fb4-12f5-483a-9080-df15135ed494"
+  },
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "gulp-debug": "^2.1.2",
+    "gulp-foreach": "^0.1.0",
+    "gulp-msbuild": "0.2.13",
+    "gulp-newer": "^1.0.0",
+    "gulp-notify": "^2.2.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-rimraf": "^0.2.0",
+    "gulp-util": "^3.0.7",
+    "gulp-watch": "^4.3.5",
+    "lodash": "^4.1.0",
+    "minimist": "^1.2.0",
+    "nopt": "^3.0.6",
+    "require-dir": "^0.3.0",
+    "rimraf": "^2.4.3",
+    "run-sequence": "^1.1.5",
+    "shelljs": "^0.5.3"
+  },
+  "description": "LiU Sitecore Solr switcher",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "70191a1242bddd9a97ee5789d7f02bdfb8ce8e9a",
+    "tarball": "https://registry.npmjs.org/liu-sitecore-solr-switch/-/liu-sitecore-solr-switch-0.0.20.tgz"
+  },
+  "keywords": [
+    "sitecore",
+    "gulp",
+	"solr"
+  ],
+  "license": "ISC",
+  "main": "build.js",
+  "maintainers": [
+    {
+      "name": "Diego Saavedra San Juan",
+      "email": "diego.saavedra.san.juan@liu.se"
+    }    
+  ],
+  "name": "liu-sitecore-solr-switch",
+  "optionalDependencies": {},
+  "private": false,
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.git@github.com:PentiaLabs/Pentia.Builder.git"
+  },
+  "scripts": {
+    "gulp": "gulp"
+  },
+  "version": "0.1"
+}

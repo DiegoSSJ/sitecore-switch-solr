@@ -1,0 +1,167 @@
+﻿# Based on https://sitecore-community.github.io/docs/search/solr/fast-track-solr-for-lazy-developers/
+# Must be run as system admin
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$solrExtractLocation)
+
+$solrVersionName="4.10.4"
+#$solrExtractLocation="D:\"
+$solrUrl="http://archive.apache.org/dist/lucene/solr/$solrVersionName/solr-$solrVersionName.zip"
+$solrExtractFolder="solr-$solrVersionName"
+$solrBinaryLocation="bin\solr.cmd"
+$solrServiceName="LiUSitecoreSolr"
+$solrServiceDisplayName="LiU Sitecore Solr service instance"
+$solrServiceDescription="This is the solr service for the LiU implementation of Sitecore. Used by developers on local machines"
+$serviceStartupWaitTime=15
+$solrCheckUrl="http://127.0.0.1:8983/solr"
+$nssmPath=".\nssm.exe"
+
+
+$tempdir = Get-Location
+$tempdir = $tempdir.tostring()
+$appToMatch = '*Java*'
+#$msiFile = $tempdir+"\microsoft.interopformsredist.msi"
+#$msiArgs = "-qb"
+
+function Get-InstalledApps
+{
+    if ([IntPtr]::Size -eq 4) {
+        $regpath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+    }
+    else {
+        $regpath = @(
+            'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
+            'HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+        )
+    }
+    Get-ItemProperty $regpath | .{process{if($_.DisplayName -and $_.UninstallString) { $_ } }} | Select DisplayName, Publisher, InstallDate, DisplayVersion, UninstallString |Sort DisplayName
+}
+
+function Test-Administrator  
+{  
+    $user = [Security.Principal.WindowsIdentity]::GetCurrent();
+    (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
+}
+
+
+# Dummy check if solr is already running 
+Write-Host "Checking if Solr is already installed"
+$isSolrServiceInstalled = Get-Service | Where-Object {$_.Name -like "*solr*"}
+if ( -not ($isSolrServiceInstalled -eq $null)) 
+{
+    # Solr already installed in some way
+    Write-Host "Solr is already available as a service, you probably have alread installed it"
+
+    # Check if running / Check if our Liu service?
+    #$isLiUSolrServiceRunning = Get-Service -Name $solrServiceName
+    #if ( $isLiUSolrServiceRunning.Status -eq "Running")
+    exit 0
+}
+
+
+
+# Check java
+Write-Host "Checking Java is installed"
+$result = Get-InstalledApps | where {$_.DisplayName -like $appToMatch}
+
+if ($result -eq $null) {
+    #(Start-Process -FilePath $msiFile -ArgumentList $msiArgs -Wait -Passthru).ExitCode
+    Write-Host "Java not installed please install from http://www.java.com/sv/download/win10.jsp"
+    exit 1
+}
+
+# Check nssm
+if(!(Test-Path $nssmPath))
+{
+    Write-Host "Nssm is not available, won't be able to create the Solr service. It should be at $nssmPath"
+    exit 1
+}
+
+# Check admin privilege, won't be able to create the service otherwise
+Write-Host "Checking administrator privilege before creating solr service"
+if ( -not (Test-Administrator)  )
+{
+    Write-Host "Not running as administrator - won't be able to create the solr service. Please run again as administrator"
+    exit 1
+}
+
+
+Write-Host "Downloading Solr $solrVersionName"
+$filename = "$env:temp\solr-$solrVersionName.zip" 
+#New-Item $filename -itemType File 
+if(!(Test-Path $filename))
+{
+    wget $solrUrl -OutFile $filename
+}
+else 
+{
+    Write-Host "Solr has already been downloaded"
+}
+
+# Kind of hard to get an exit code from wget/Invoke-WebRequest so we just check if the file is there and over 0 size
+if(!(Test-Path $filename))
+{
+    Write-Host "Couldn't download the Solr zip file correctly, check error messages and fix accordingly."
+    exit 1
+}
+
+
+Write-Host "Unpacking Solr"
+#New-Item -ItemType Directory -Force -Path C:\
+if(!(Test-Path $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation))
+{
+    Expand-Archive $filename -DestinationPath $solrExtractLocation
+}
+else 
+{
+    Write-Host "Solr had already been extracted to $solrExtractLocation"
+}
+
+if(!(Test-Path $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation))
+{
+    Write-Host "Couldn't extract solr, check error messages and fix accordingly"
+    exit 1
+}
+
+
+Write-Host "Setting up Solr as a service"
+
+# Doesn't work to use user credentials, must be run as admin. -> PermissionDenied
+#New-Service -BinaryPathName "$solrExtracLocation\$solrExtractFolder\$solrBinaryLocation start"  -Credential $env:USERDOMAIN\$env:USERNAME -Name $solrServiceName -DisplayName $solrServiceDisplayName -StartupType Automatic -Description $solrServiceDescription
+#New-Service -BinaryPathName "$solrExtractLocation\$solrExtractFolder\$solrBinaryLocation start" -Name $solrServiceName -DisplayName $solrServiceDisplayName -StartupType Automatic -Description $solrServiceDescription -ErrorVariable scErr
+# Use nssm to create the service as we are trying to run an exe that is not compiled to be a service. See http://serverfault.com/questions/54676/how-to-create-a-service-running-a-bat-file-on-windows-2008-server
+# http://nssm.cc/commands
+#$nssmInstallScript = {"$nssmPath install $solrServiceName start -f"}
+#$nssmChangeAppDirectory = {"$nssmPath set AppDirectory $solrExtractLocation\$solrExtractFolder\bin"}
+#Invoke-Command -ScriptBlock $nssmInstallScript
+#Invoke-Command -ScriptBlock $nssmChangeAppDirectory 
+$res = Start-Process $nssmPath -ArgumentList "install $solrServiceName $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation start -f" -Wait -NoNewWindow -PassThru
+$res2 = Start-Process $nssmPath -ArgumentList "set $solrServiceName AppDirectory $solrExtractLocation\$solrExtractFolder\bin" -Wait -NoNewWindow -PassThru
+
+
+Start-Sleep 2
+Start-Service -Name $solrServiceName
+
+Write-Host "Checking if Solr service was created correctly"
+$isSolrRunning = Get-Service | Where-Object {$_.Name -like "*solr*"}
+if ( $isSolrRunning -eq $null ) 
+{
+    Write-Host "Something went wrong setting up the service, it is not listed in the service list"
+    exit 1
+}
+
+
+Write-Host "Waiting $serviceStartupWaitTime second to check if Solr started correctly"
+Start-Sleep $serviceStartupWaitTime
+# Check that the service is effectively running 
+wget $solrCheckUrl -OutVariable solrCheckResult > $null
+if($solrCheckResult.StatusCode -eq $null -or ! $solrCheckUrl -eq 200 )
+{
+    Write-Host "Something is wrong with the solr service, please check service creation"
+    exit 1
+}
+
+
+Write-Host "Solr installed correctly"
+exit 0
