@@ -19,7 +19,7 @@ $solrBinaryLocation="bin\solr.cmd"
 $solrServiceName="LiUSitecoreSolr"
 $solrServiceDisplayName="LiU Sitecore Solr service instance"
 $solrServiceDescription="This is the solr service for the LiU implementation of Sitecore. Used by developers on local machines"
-$serviceStartupWaitTime=15
+$serviceStartupWaitTime=25
 $solrCheckUrl="http://127.0.0.1:8983/solr"
 $nssmPath=".\nssm.exe"
 
