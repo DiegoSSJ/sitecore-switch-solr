@@ -44,7 +44,7 @@
   "name": "sitecore-switch-solr",
   "optionalDependencies": {},
   "private": false,
-  "readme": "ERROR: No README data found!",
+  "readme": "README.md",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.git@github.com:diegossj/sitecore-switch-solr.git"
