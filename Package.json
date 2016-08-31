@@ -42,7 +42,8 @@
     }
   ],
   "name": "sitecore-switch-solr",
-  "optionalDependencies": {},
+  "optionalDependencies": { },
+  "os": ["win32"],
   "private": false,
   "readme": "README.md",
   "repository": {
@@ -52,5 +53,5 @@
   "scripts": {
     "gulp": "gulp"
   },
-  "version": "1.0.2"
+  "version": "1.0.3"
 }
