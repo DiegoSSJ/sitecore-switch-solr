@@ -15,17 +15,17 @@ gulp.task("switch-to-solr", function (callback) {
   var taskDir = path.dirname(fs.realpathSync(__filename));
   var psFile = path.join(taskDir, "../powershell-scripts/install-solr.ps1");
   var result = powershell.runSync(psFile, " -solrExtractLocation " + config.solrExtractLocation, path.join(taskDir, "../powershell-scripts"), callback);
-  if (result.status > 0)
+  if (result > 0 )
   {
-    build.LogEvent("builder", "Installing Solr failed, quitting")
-    process.exit()
-  }    
+    build.logEvent("builder", "Installing Solr failed, quitting")
+    process.exit(1)
+  }     
   build.logEvent("builder", "Switching Sitecore instance on  " + config.websiteRoot + " to use Solr");
   var psFile = path.join(taskDir, "../powershell-scripts/configure-sitecore-solr.ps1");
   var result = powershell.runSync(psFile, " -webRootPath " + config.websiteRoot + " -solrExtractLocation " + config.solrExtractLocation, path.join(taskDir, "../powershell-scripts"), callback);
-  if (result.status > 0) {
-    build.LogEvent("builder", "Configuring Solr failed, quitting")
-    process.exit()
+  if (result > 0) {
+    build.logEvent("builder", "Configuring Solr failed, quitting")
+    process.exit(1)
   }
   // TODO: Trigger index rebuild automatically
   build.logEvent("builder", "Sitecore switch to solr completed successfully, don't forget to rebuild indexes in Sitecores control panel");

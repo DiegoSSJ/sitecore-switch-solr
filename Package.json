@@ -45,7 +45,7 @@
   "optionalDependencies": { },
   "os": ["win32"],
   "private": false,
-  "readme": "README.md",
+  "readme": "See http://github.com/diegossj/sitecore-switch-solr",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.git@github.com:diegossj/sitecore-switch-solr.git"
@@ -53,5 +53,5 @@
   "scripts": {
     "gulp": "gulp"
   },
-  "version": "1.0.3"
+  "version": "1.0.4"
 }

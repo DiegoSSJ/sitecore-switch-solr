@@ -77,6 +77,16 @@ if ($result -eq $null) {
     exit 1
 }
 
+# Try to actually run java (it has to be in the path for the Solr service to be able to start)
+try
+{
+    java 2> $null
+}
+catch
+{
+    Write-Host "Java is installed but it is not in the path, you should probably fix this otherwise the Solr service won't start"
+}
+
 # Check nssm
 if(!(Test-Path $nssmPath))
 {
