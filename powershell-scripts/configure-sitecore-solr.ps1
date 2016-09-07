@@ -77,6 +77,9 @@ else
 }
 
 
+# This part about changing config files names in Sitecore can also be done like this
+# https://gist.github.com/patrickperrone/59b8745ee8b8ff9045b5
+# so it is possible to switch back to Lucene
 
 # Disable lucene config files in Sitecore App_Config/Include
 Write-Host "Disabling Lucene config files in the App_Config folder of the website"
