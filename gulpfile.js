@@ -21,10 +21,10 @@ build.setEnvironment(args.env);
   
 gulp.task("setup-solr", function (callback) {
   runSequence(
-    "switch-to-solr"
+    "install-solr",
+    "sitecore-switch-to-solr"
     , callback);
 });
-
 
 gulp.task("default", function () {
 	console.log("You need to specifiy a task.");
