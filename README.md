@@ -19,7 +19,9 @@ This npm package is intended to be included from a Sitecore Habitat project. It 
 
 Then it gets installed with ```npm install```
 
-It then provides a task called ```setup-solr``` that can be run from your solution's gulp file. The task should be run as administrator user (to create the Solr service)
+It then provides a task called ```setup-solr``` that can be run from your solution's gulp file. It runs two different subtasks, one to install solr and configure the Sitecore cores, and another
+to switch the Sitecore instance so that it uses Solr instead of Lucene, by enabling/disabling configuration files, copying the needed DLLs and modifying Global.asax. 
+The Solr installation task has to be run as administrator user (to create the Solr service), so the ```setup-solr``` has also to be run as administrator. 
 
 You can include it in your project setup like this:
 ```
@@ -37,8 +39,13 @@ gulp setup-solr
 ```
 
 ```
-gulp swith-to-solr
+gulp install-solr
 ```
+
+```
+gulp switch-to-solr
+```
+
 
 ##Gulp task parameters
 
