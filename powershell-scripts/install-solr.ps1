@@ -23,6 +23,7 @@ $solrServiceName="LiUSitecoreSolr"
 $solrServiceDisplayName="LiU Sitecore Solr service instance"
 $solrServiceDescription="This is the solr service for the LiU implementation of Sitecore. Used by developers on local machines"
 $serviceStartupWaitTime=25
+$serviceStopWaitTime=15
 $solrCheckUrl="http://127.0.0.1:8983/solr"
 $nssmPath=".\nssm.exe"
 
@@ -172,7 +173,7 @@ if ( $isSolrRunning -eq $null )
 }
 
 
-Write-Host "Waiting $serviceStartupWaitTime second to check if Solr started correctly"
+Write-Host "Waiting $serviceStartupWaitTime seconds to check if Solr started correctly"
 Start-Sleep $serviceStartupWaitTime
 # Check that the service is effectively running 
 wget $solrCheckUrl -OutVariable solrCheckResult > $null
