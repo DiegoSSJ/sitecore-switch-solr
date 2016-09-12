@@ -31,62 +31,28 @@ $solrVersionName="4.10.4"
                                                          
 
 $solrExtractFolder="solr-$solrVersionName"
-$solrCoresPath="$solrExtractLocation\$solrExtractFolder\example\solr"
+
 $serviceStopWaitTime=5
 
 $filesLocation="..\files"
-$solrCleanCores="$filesLocation\Clean SOLR cores 4.10.zip"
-$microsoftUnityDll="$filesLocation\\Microsoft.Practices.Unity.dll"
+$microsoftUnityDllName="Microsoft.Practices.Unity.dll"
+$microsoftUnityDllLocation="$filesLocation\\$microsoftUnityDllName"
 $globalAsax="$filesLocation\Global.asax"
 $sitecoreSolrDllsPackageName="$filesLocation\Sitecore.Solr.Support 1.0.0 rev. 160504.zip"
 
 
 $websiteAppConfigIncludeFolder="$webRootPath\App_Config\Include"
 
-# Copy cores
-
-if(!(Test-Path $solrCleanCores))
-{
-    Write-Host "Solr clean cores package not found, make sure the package is correctly configured"
-    exit 1
-}
-
-Write-Host "Unpacking clean solr Sitecore cores"
-if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
-{
-    Expand-Archive $solrCleanCores -DestinationPath $solrCoresPath
-    if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
-    {
-        Write-Host "Couldn't extract solr cores, check error messages and fix accordingly"
-        exit 1
-    }
-
-    Write-Host "Correctly unpacked Sitecore solr cores"
-
-    # Restart Solr to re-read cores
-    Write-Host "Restarting Solr service to re read cores"
-    Stop-Service -Name $solrServiceName
-    Start-Sleep $serviceStopWaitTime
-    Start-Service -Name $solrServiceName
-    Write-Host "Done restarting"
-
-}
-else 
-{
-    Write-Host "Solr cores already installed in $solrCoresPath"
-}
 
 
-# This part about changing config files names in Sitecore can also be done like this
-# https://gist.github.com/patrickperrone/59b8745ee8b8ff9045b5
-# so it is possible to switch back to Lucene
+
 
 # Disable lucene config files in Sitecore App_Config/Include
 Write-Host "Disabling Lucene config files in the App_Config folder of the website"
 
 if(!(Test-Path $websiteAppConfigIncludeFolder))
 {
-    Write-Host "Website App_Config\Include folder not found, error in parameters?"
+    Write-Host "Website App_Config\Include folder not found, error in parameters?" -ForegroundColor Red
     exit 1
 }
 
@@ -96,7 +62,7 @@ $luceneConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -re
 
 if($luceneFilesFound.Count -eq 0)
 {
-    Write-Host "No Lucene files found, wrong Sitecore installation?"
+    Write-Host "No Lucene files found, wrong Sitecore installation?" -ForegroundColor Red
     exit 1
 }
 
@@ -117,7 +83,7 @@ else
     $luceneConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Lucene*.config"
     if($luceneConfigFilesFound.Count -gt 0 )
     {
-        Write-Host "Something went wrong disabling Lucene config files, there are still some left"
+        Write-Host "Something went wrong disabling Lucene config files, there are still some left" -ForegroundColor Red
         exit 1
     }
 
@@ -152,7 +118,7 @@ $solrConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec 
 
 if($solrFilesFound.Count -eq 0)
 {
-    Write-Host "No Solr files found, wrong Sitecore installation?"
+    Write-Host "No Solr files found, wrong Sitecore installation?" -ForegroundColor Red
     exit 1
 }
 
@@ -185,7 +151,7 @@ else
     $solrExampleConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.example"
     if($solrDisabledConfigFilesFound.Count -gt 0  -and $solrExampleConfigFilesFound.Count -gt 0)
     {
-        Write-Host "Something went wrong enabling Solr config files, there are still some left disabled/exampled"
+        Write-Host "Something went wrong enabling Solr config files, there are still some left disabled/exampled" -ForegroundColor Red
         exit 1
     }
 
@@ -216,10 +182,9 @@ else
 
 
 # Copy Sitecore Solr dlls
-
 if(!(Test-Path $sitecoreSolrDllsPackageName))
 {
-    Write-Host "Sitecore Solr dlls package not found, make sure the package is correctly configured"
+    Write-Host "Sitecore Solr dlls package not found, make sure the package is correctly configured" -ForegroundColor Red
     exit 1
 }
 
@@ -229,7 +194,7 @@ if(!(Test-Path $webRootPath\bin\Sitecore.ContentSearch.SolrProvider.dll))
     Expand-Archive $sitecoreSolrDllsPackageName -DestinationPath $webRootPath
     if(!(Test-Path "$webRootPath\bin\Sitecore.ContentSearch.SolrProvider.dll"))
     {
-        Write-Host "Couldn't find Sitecore Solr dlls after unzipping, check error messages and fix accordingly"
+        Write-Host "Couldn't find Sitecore Solr dlls after unzipping, check error messages and fix accordingly" -ForegroundColor Red
         exit 1
     }
 
@@ -241,11 +206,11 @@ else
 }
 
 # Copy Unity dll
-if(!(Test-Path $webRootPath\bin\$microsoftUnityDll))
+if(!(Test-Path $webRootPath\bin\$microsoftUnityDllName))
 {
-    Write-Host "Copying Microsoft Unity dll to $webRootPath\bin"
+    Write-Host "Copying Microsoft Unity dll to $webRootPath\bin..." -NoNewline
     Copy-Item $microsoftUnityDll $webRootPath\bin
-    Write-Host "Copying Microsoft Unity dll to $webRootPath\bin done"
+    Write-Host "Done"
 }
 else
 {
@@ -253,6 +218,14 @@ else
 }
 
 # Copy Global.asax
-Write-Host "Copying Global.asax to $webRootPath"
+Write-Host "Copying Global.asax to $webRootPath... " -NoNewline
 Copy-Item $globalAsax $webRootPath
-Write-Host "Copying Global.asax to $webRootPath done"
+Write-Host "Done"
+
+// TODO: Trigger index rebuild automatically -> Could be done with Sitecore Powershell extensions (remote) if they are installed. See 
+  // http://blog.najmanowicz.com/2014/10/10/sitecore-powershell-extensions-remoting/ and 
+  // https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/remoting.html
+  // and to run the update index command:  https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/appendix/commands/Initialize-SearchIndex.html
+
+Write-Host "Sitecore switch to Solr complete" -ForegroundColor Green
+exit 0
