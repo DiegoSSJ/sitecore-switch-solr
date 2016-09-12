@@ -43,7 +43,7 @@ gulp install-solr
 ```
 
 ```
-gulp switch-to-solr
+gulp sitecore-switch-to-solr
 ```
 
 
