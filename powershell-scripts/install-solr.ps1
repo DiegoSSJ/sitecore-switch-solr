@@ -7,14 +7,17 @@ param(
 
 if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
 {
-    Write-Host "Parameter $solrExtractLocation is mandatory, but it is null or empty"
+    Write-Host "Parameter $solrExtractLocation is mandatory, but it is null or empty" -ForegroundColor Red
     exit 1
 }
 
 $solrVersionName="4.10.4"
 #$solrExtractLocation="D:\"
+$filesLocation="..\files"
 $solrUrl="http://archive.apache.org/dist/lucene/solr/$solrVersionName/solr-$solrVersionName.zip"
 $solrExtractFolder="solr-$solrVersionName"
+$solrCleanCores="$filesLocation\Clean SOLR cores 4.10.zip"
+$solrCoresPath="$solrExtractLocation\$solrExtractFolder\example\solr"
 $solrBinaryLocation="bin\solr.cmd"
 $solrServiceName="LiUSitecoreSolr"
 $solrServiceDisplayName="LiU Sitecore Solr service instance"
@@ -57,7 +60,7 @@ $isSolrServiceInstalled = Get-Service | Where-Object {$_.Name -like "*solr*"}
 if ( -not ($isSolrServiceInstalled -eq $null)) 
 {
     # Solr already installed in some way
-    Write-Host "Solr is already available as a service, you probably have alread installed it"
+    Write-Host "Solr is already available as a service, you probably have alread installed it" -ForegroundColor Green
 
     # Check if running / Check if our Liu service exists?
     #$isLiUSolrServiceRunning = Get-Service -Name $solrServiceName
@@ -73,7 +76,7 @@ $result = Get-InstalledApps | where {$_.DisplayName -like $appToMatch}
 
 if ($result -eq $null) {
     #(Start-Process -FilePath $msiFile -ArgumentList $msiArgs -Wait -Passthru).ExitCode
-    Write-Host "Java not installed please install from http://www.java.com/sv/download/win10.jsp"
+    Write-Host "Java not installed please install from http://www.java.com/sv/download/win10.jsp" -ForegroundColor Red
     exit 1
 }
 
@@ -84,21 +87,22 @@ try
 }
 catch
 {
-    Write-Host "Java is installed but it is not in the path, you should probably fix this otherwise the Solr service won't start"
+    Write-Host "Java is installed but it is not in the path, you have to add it ot the path so that Solr service will be able to start" -ForegroundColor Red
+    exit 1
 }
 
 # Check nssm
 if(!(Test-Path $nssmPath))
 {
-    Write-Host "Nssm is not available, won't be able to create the Solr service. It should be at $nssmPath"
+    Write-Host "Nssm is not available, won't be able to create the Solr service. It should be at $nssmPath" -ForegroundColor Red
     exit 1
 }
 
 # Check admin privilege, won't be able to create the service otherwise
 Write-Host "Checking administrator privilege before creating solr service"
 if ( -not (Test-Administrator)  )
-{
-    Write-Host "Not running as administrator - won't be able to create the solr service. Please run again as administrator"
+{ 
+    Write-Host "Not running as administrator - won't be able to create the solr service. Please run again as administrator" -ForegroundColor Red
     exit 1
 }
 
@@ -118,7 +122,7 @@ else
 # Kind of hard to get an exit code from wget/Invoke-WebRequest so we just check if the file is there and over 0 size
 if(!(Test-Path $filename))
 {
-    Write-Host "Couldn't download the Solr zip file correctly, check error messages and fix accordingly."
+    Write-Host "Couldn't download the Solr zip file correctly, check error messages and fix accordingly." -ForegroundColor Red
     exit 1
 }
 
@@ -136,7 +140,7 @@ else
 
 if(!(Test-Path $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation))
 {
-    Write-Host "Couldn't extract solr, check error messages and fix accordingly"
+    Write-Host "Couldn't extract solr, check error messages and fix accordingly" -ForegroundColor Red
     exit 1
 }
 
@@ -162,8 +166,8 @@ Start-Service -Name $solrServiceName
 Write-Host "Checking if Solr service was created correctly"
 $isSolrRunning = Get-Service | Where-Object {$_.Name -like "*solr*"}
 if ( $isSolrRunning -eq $null ) 
-{
-    Write-Host "Something went wrong setting up the service, it is not listed in the service list"
+{ 
+    Write-Host "Something went wrong setting up the service, it is not listed in the service list" -ForegroundColor Red
     exit 1
 }
 
@@ -174,10 +178,43 @@ Start-Sleep $serviceStartupWaitTime
 wget $solrCheckUrl -OutVariable solrCheckResult > $null
 if($solrCheckResult.StatusCode -eq $null -or ! $solrCheckUrl -eq 200 )
 {
-    Write-Host "Something is wrong with the solr service, please check service creation"
+    Write-Host "Something is wrong with the solr service, please check service creation" -ForegroundColor Red
     exit 1
 }
 
+# Copy cores
 
-Write-Host "Solr installed correctly"
+if(!(Test-Path $solrCleanCores))
+{ 
+    Write-Host "Solr clean cores package not found, make sure the package is correctly configured" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "Unpacking clean solr Sitecore cores"
+if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
+{
+    Expand-Archive $solrCleanCores -DestinationPath $solrCoresPath
+    if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
+    {
+        Write-Host "Couldn't extract solr cores, check error messages and fix accordingly" -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "Correctly unpacked Sitecore solr cores"
+
+    # Restart Solr to re-read cores
+    Write-Host "Restarting Solr service to re read cores"
+    Stop-Service -Name $solrServiceName
+    Start-Sleep $serviceStopWaitTime
+    Start-Service -Name $solrServiceName
+    Write-Host "Done restarting"
+
+}
+else 
+{
+    Write-Host "Solr cores already installed in $solrCoresPath"
+}
+
+
+Write-Host "Solr installed correctly" -ForegroundColor Green
 exit 0
