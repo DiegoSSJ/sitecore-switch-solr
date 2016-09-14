@@ -228,4 +228,5 @@ Write-Host "Done"
 # and to run the update index command:  https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/appendix/commands/Initialize-SearchIndex.html
 
 Write-Host "Sitecore switch to Solr complete" -ForegroundColor Green
-Write-Host "Remember to rebuild the indexes to actually switch Sitecore indexes to Solr!" -ForegroundColor Yellowexit 0
+Write-Host "Remember to rebuild the indexes to actually switch Sitecore indexes to Solr!" -ForegroundColor Yellow
+exit 0
