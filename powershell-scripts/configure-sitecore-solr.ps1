@@ -222,11 +222,10 @@ Write-Host "Copying Global.asax to $webRootPath... " -NoNewline
 Copy-Item $globalAsax $webRootPath
 Write-Host "Done"
 
-// TODO: Trigger index rebuild automatically -> Could be done with Sitecore Powershell extensions (remote) if they are installed. See 
-  // http://blog.najmanowicz.com/2014/10/10/sitecore-powershell-extensions-remoting/ and 
-  // https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/remoting.html
-  // and to run the update index command:  https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/appendix/commands/Initialize-SearchIndex.html
+# TODO: Trigger index rebuild automatically -> Could be done with Sitecore Powershell extensions (remote) if they are installed. See 
+# http://blog.najmanowicz.com/2014/10/10/sitecore-powershell-extensions-remoting/ and 
+# https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/remoting.html
+# and to run the update index command:  https://sitecorepowershell.gitbooks.io/sitecore-powershell-extensions/content/appendix/commands/Initialize-SearchIndex.html
 
 Write-Host "Sitecore switch to Solr complete" -ForegroundColor Green
-Write-Host "Remember to rebuild the indexes to actually switch Sitecore indexes to Solr!" -ForegroundColor Yellow
-exit 0
+Write-Host "Remember to rebuild the indexes to actually switch Sitecore indexes to Solr!" -ForegroundColor Yellowexit 0
