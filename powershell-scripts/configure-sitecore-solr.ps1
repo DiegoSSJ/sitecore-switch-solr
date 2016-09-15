@@ -209,7 +209,7 @@ else
 if(!(Test-Path $webRootPath\bin\$microsoftUnityDllName))
 {
     Write-Host "Copying Microsoft Unity dll to $webRootPath\bin..." -NoNewline
-    Copy-Item $microsoftUnityDll $webRootPath\bin
+    Copy-Item $microsoftUnityDllLocation $webRootPath\bin
     Write-Host "Done"
 }
 else
