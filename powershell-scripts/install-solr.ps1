@@ -22,10 +22,13 @@ $solrBinaryLocation="bin\solr.cmd"
 $solrServiceName="LiUSitecoreSolr"
 $solrServiceDisplayName="LiU Sitecore Solr service instance"
 $solrServiceDescription="This is the solr service for the LiU implementation of Sitecore. Used by developers on local machines"
-$serviceStartupWaitTime=25
-$serviceStopWaitTime=15
+$serviceStartupWaitTime=30
+$serviceStopWaitTime=20
 $solrCheckUrl="http://127.0.0.1:8983/solr"
-$nssmPath=".\nssm.exe"
+$solrBinaryFolder="$solrExtractLocation\$solrExtractFolder\bin\"
+$nssmName="nssm.exe"
+$nssmLocalPath="$nssmName"
+$nssmSolrPath="$solrBinaryFolder\$nssmName"
 
 
 $tempdir = Get-Location
@@ -93,9 +96,9 @@ catch
 }
 
 # Check nssm
-if(!(Test-Path $nssmPath))
+if(!(Test-Path $nssmLocalPath))
 {
-    Write-Host "Nssm is not available, won't be able to create the Solr service. It should be at $nssmPath" -ForegroundColor Red
+    Write-Host "Nssm is not available, won't be able to create the Solr service. It should be at $nssmLocalPath" -ForegroundColor Red
     exit 1
 }
 
@@ -133,6 +136,7 @@ Write-Host "Unpacking Solr"
 if(!(Test-Path $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation))
 {
     Expand-Archive $filename -DestinationPath $solrExtractLocation
+    Copy-Item -Path $nssmLocalPath -Destination $solrBinaryFolder
 }
 else 
 {
@@ -157,8 +161,8 @@ Write-Host "Setting up Solr as a service"
 #$nssmChangeAppDirectory = {"$nssmPath set AppDirectory $solrExtractLocation\$solrExtractFolder\bin"}
 #Invoke-Command -ScriptBlock $nssmInstallScript
 #Invoke-Command -ScriptBlock $nssmChangeAppDirectory 
-$res = Start-Process $nssmPath -ArgumentList "install $solrServiceName $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation start -f" -Wait -NoNewWindow -PassThru
-$res2 = Start-Process $nssmPath -ArgumentList "set $solrServiceName AppDirectory $solrExtractLocation\$solrExtractFolder\bin" -Wait -NoNewWindow -PassThru
+$res = Start-Process $nssmSolrPath -ArgumentList "install $solrServiceName $solrExtractLocation\$solrExtractFolder\$solrBinaryLocation start -f" -Wait -NoNewWindow -PassThru
+$res2 = Start-Process $nssmSolrPath -ArgumentList "set $solrServiceName AppDirectory $solrExtractLocation\$solrExtractFolder\bin" -Wait -NoNewWindow -PassThru
 
 
 Start-Sleep 2
@@ -182,6 +186,7 @@ if($solrCheckResult.StatusCode -eq $null -or ! $solrCheckUrl -eq 200 )
     Write-Host "Something is wrong with the solr service, please check service creation" -ForegroundColor Red
     exit 1
 }
+Write-Host "Solr is running correctly"
 
 # Copy cores
 
