@@ -8,6 +8,14 @@ var powershell = require("../modules/powershell");
 var path = require("path");
 var fs = require("fs")
 
+var nopt = require("nopt");
+
+var args = nopt({
+  "env"     : [String, null]
+});
+
+build.setEnvironment(args.env);
+
 gulp.task("sitecore-switch-to-solr", function (callback) { 
   // Can be done with gulp-run? https://www.npmjs.com/package/gulp-run
   var taskDir = path.dirname(fs.realpathSync(__filename));
