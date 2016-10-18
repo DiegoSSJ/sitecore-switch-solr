@@ -13,10 +13,9 @@ gulp.task("sitecore-switch-to-solr", function (callback) {
   var taskDir = path.dirname(fs.realpathSync(__filename));
   build.logEvent("builder", "Switching Sitecore instance on  " + config.websiteRoot + " to use Solr");
   var psFile = path.join(taskDir, "../powershell-scripts/configure-sitecore-solr.ps1");
-  var websiteRoot;
+  var websiteRoot = config.websiteRoot;
   if(!path.isAbsolute(config.websiteRoot))
     websiteRoot = path.join(process.cwd(),config.websiteRoot);
-  else websiteRoot = config.websiteRoot;
 
   powershell.runSync(psFile, " -webRootPath " + websiteRoot + " -solrExtractLocation " + config.solrExtractLocation, path.join(taskDir, "../powershell-scripts"), callback);
   
