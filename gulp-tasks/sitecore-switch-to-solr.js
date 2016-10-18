@@ -7,7 +7,6 @@ var config = build.config;
 var powershell = require("../modules/powershell");
 var path = require("path");
 var fs = require("fs")
-
 var nopt = require("nopt");
 
 var args = nopt({
