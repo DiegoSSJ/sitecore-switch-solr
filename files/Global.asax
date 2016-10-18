@@ -1,1 +1,1 @@
-<%@Application Language='C#' Inherits="Sitecore.ContentSearch.SolrProvider.UnityIntegration.UnityApplication" %>
+<%@ Application Language='C#' Inherits="Sitecore.ContentSearch.SolrProvider.StructureMapIntegration.StructureMapApplication" %>

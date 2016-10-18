@@ -35,8 +35,8 @@ $solrExtractFolder="solr-$solrVersionName"
 $serviceStopWaitTime=5
 
 $filesLocation="..\files"
-$microsoftUnityDllName="Microsoft.Practices.Unity.dll"
-$microsoftUnityDllLocation="$filesLocation\\$microsoftUnityDllName"
+$StructureMapDllName="StructureMap.dll"
+$StructureMapDllLocation="$filesLocation\\$StructureMapDllName"
 $globalAsax="$filesLocation\Global.asax"
 $sitecoreSolrDllsPackageName="$filesLocation\Sitecore.Solr.Support 1.0.0 rev. 160504.zip"
 
@@ -205,16 +205,16 @@ else
     Write-Host "Sitecore Solr dlls already installed"
 }
 
-# Copy Unity dll
-if(!(Test-Path $webRootPath\bin\$microsoftUnityDllName))
+# Copy StructureMap dll
+if(!(Test-Path $webRootPath\bin\$StructureMapDllName))
 {
-    Write-Host "Copying Microsoft Unity dll to $webRootPath\bin..." -NoNewline
-    Copy-Item $microsoftUnityDllLocation $webRootPath\bin
+    Write-Host "Copying StructureMap dll to $webRootPath\bin..." -NoNewline
+    Copy-Item $StructureMapDllLocation $webRootPath\bin
     Write-Host "Done"
 }
 else
 {
-    Write-Host "Microsoft Unity dll already in $webRootPath\bin, good. Continuing"
+    Write-Host "StructureMap dll already in $webRootPath\bin, good. Continuing"
 }
 
 # Copy Global.asax
