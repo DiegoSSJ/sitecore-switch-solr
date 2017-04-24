@@ -1,0 +1,3 @@
+[submodule "powershell-scripts/sitecore-machine-setup-tools"]
+	path = powershell-scripts/sitecore-machine-setup-tools
+	url = https://github.com/DiegoSSJ/sitecore-machine-setup-tools.git

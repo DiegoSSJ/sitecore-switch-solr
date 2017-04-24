@@ -1,9 +1,45 @@
-﻿param(    
+﻿
+<#
+.SYNOPSIS
+    Configures Sitecore/Solr to work with each other
+.DESCRIPTION
+    Configures Sitecore to work with Solr and viceversa. Changes Sitecore configuration files from Lucene to Solr, 
+
+.PARAMETER solrExtractLocation
+    The Path where Solr was extracted
+.PARAMETER webRootPath
+     The path where the Sitecore website is (should contain App_Config inside it)
+.PARAMETER sitecoreVersion
+     The Sitecore version we are configuring to use Solr for. So that the process works for it. 
+.EXAMPLE
+    C:\PS> configure-sitecore-solr.ps1 -solrExtractLocation C:\solr -webRootPath C:\websites\Sitecore\Website
+.NOTES
+    Author: Diego Saavedra San Juan
+    Date:   Many
+#>
+
+param(    
     [Parameter(Mandatory=$true)]
     [string]$solrExtractLocation,
 	[Parameter(Mandatory=$true)]
-    [string]$webRootPath)
+    [string]$webRootPath,
+    [Parameter(Mandatory=$true)]
+    [string]$sitecoreVersion="8.2")
 
+
+# Supported according to instructions on 
+#https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/search_and_indexing/walkthrough_setting_up_solr
+#https://doc.sitecore.net/sitecore_experience_platform/81/setting_up_and_maintaining/search_and_indexing/walkthrough_setting_up_solr
+#https://kb.sitecore.net/articles/227897
+$supportedSitecoreVersions = "8.1", "8.2";
+
+# This is more complicated than anticipated, because from Sc 8.2 the FileVersion is not the Sitecore version but something like 10.*
+# and specific per dll. We ask the user instead, via parameter
+#
+#Function Get-Sitecore-Version 
+#{
+#    return [System.Diagnostics.FileVersionInfo]::GetVersionInfo("$webRootPath\bin\Sitecore.Kernel.dll").FileVersion
+#}
 
 if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
 {
@@ -11,29 +47,38 @@ if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
     exit 1
 }
 
-
 if ($webRootPath -eq $null -or $webRootPath -eq "")
 {
     Write-Host "Parameter webRootPath is mandatory, but it is null or empty"
     exit 1
 }
 
+
 # Ex.
 #$solrExtractLocation="D:\"
 #$webRootPath="C:\websites\LiU.local-solr\Website"
+
+$solrLocation= Get-Item (Get-ChildItem $solrExtractLocation -name "*solr*").PsPath
+$solrLocation = $solrLocation.FullName
+Import-Module .\solr-powershell.psm1 -Force -ArgumentList @($solrLocation) 
+$solrVersion = Get-SolrVersion $solrLocation
+
+if ( $solrVersion.major -eq 5 -and $solrVersion.minor -eq 5 -and $solrVersion.revision -eq 0)
+{
+    Write-Error "Version 5.5.0 of Solr doesn't work with Sitecore, please use another Solr version. See https://kb.sitecore.net/articles/227897 for more information"
+    exit 1
+}
+
 
 
 # Constant parameters
 $solrServiceName="LiUSitecoreSolr"
 # We don't let this be a parameter since the article this is based on explicitly explains there are problems with other (newer) Solr versions.
 # Until or if those problems are addressed in these scripts, then we could accept this as parameter (with validation of correct version).
-$solrVersionName="4.10.4"                                
-                                                         
-
-$solrExtractFolder="solr-$solrVersionName"
+#$solrVersionName="4.10.4"                                
+#$solrExtractFolder="solr-$solrVersionName"
 
 $serviceStopWaitTime=5
-
 $filesLocation="..\files"
 $StructureMapDllName="StructureMap.dll"
 $StructureMapDllLocation="$filesLocation\\$StructureMapDllName"
@@ -44,12 +89,11 @@ $sitecoreSolrDllsPackageName="$filesLocation\Sitecore.Solr.Support 1.0.0 rev. 16
 $websiteAppConfigIncludeFolder="$webRootPath\App_Config\Include"
 
 
-
+Write-Host "Starting enabling Solr on Sitecore instance at $webRootPath for Sitecore version $sitecoreVersion" -ForegroundColor Cyan
 
 
 # Disable lucene config files in Sitecore App_Config/Include
-Write-Host "Disabling Lucene config files in the App_Config folder of the website"
-
+Write-Host "Disabling Lucene config files in the App_Config folder of the website" -ForegroundColor Cyan
 if(!(Test-Path $websiteAppConfigIncludeFolder))
 {
     Write-Host "Website App_Config\Include folder not found, error in parameters?" -ForegroundColor Red
@@ -180,47 +224,49 @@ else
 #)
 
 
-
-# Copy Sitecore Solr dlls
-if(!(Test-Path $sitecoreSolrDllsPackageName))
+if ( $sitecoreVersion -match "8.1" )
 {
-    Write-Host "Sitecore Solr dlls package not found, make sure the package is correctly configured" -ForegroundColor Red
-    exit 1
-}
+	# Copy Sitecore Solr dlls
+	if(!(Test-Path $sitecoreSolrDllsPackageName))
+	{
+		Write-Host "Sitecore Solr dlls package not found, make sure the package is correctly configured" -ForegroundColor Red
+		exit 1
+	}
 
-Write-Host "Unpacking Sitecore Solr dlls"
-if(!(Test-Path $webRootPath\bin\Sitecore.ContentSearch.SolrProvider.dll))
-{
-    Expand-Archive $sitecoreSolrDllsPackageName -DestinationPath $webRootPath
-    if(!(Test-Path "$webRootPath\bin\Sitecore.ContentSearch.SolrProvider.dll"))
-    {
-        Write-Host "Couldn't find Sitecore Solr dlls after unzipping, check error messages and fix accordingly" -ForegroundColor Red
-        exit 1
-    }
+	Write-Host "Unpacking Sitecore Solr dlls"
+	if(!(Test-Path $webRootPath\bin\Sitecore.ContentSearch.SolrProvider.dll))
+	{
+		Expand-Archive $sitecoreSolrDllsPackageName -DestinationPath $webRootPath
+		if(!(Test-Path "$webRootPath\bin\Sitecore.ContentSearch.SolrProvider.dll"))
+		{
+			Write-Host "Couldn't find Sitecore Solr dlls after unzipping, check error messages and fix accordingly" -ForegroundColor Red
+			exit 1
+		}
 
-    Write-Host "Correctly unpacked Sitecore Solr dlls"    
-}
-else 
-{
-    Write-Host "Sitecore Solr dlls already installed"
-}
+		Write-Host "Correctly unpacked Sitecore Solr dlls"    
+	}
+	else 
+	{
+		Write-Host "Sitecore Solr dlls already installed"
+	}
 
-# Copy StructureMap dll
-if(!(Test-Path $webRootPath\bin\$StructureMapDllName))
-{
-    Write-Host "Copying StructureMap dll to $webRootPath\bin..." -NoNewline
-    Copy-Item $StructureMapDllLocation $webRootPath\bin
-    Write-Host "Done"
-}
-else
-{
-    Write-Host "StructureMap dll already in $webRootPath\bin, good. Continuing"
-}
+	# Copy StructureMap dll
+	if(!(Test-Path $webRootPath\bin\$StructureMapDllName))
+	{
+		Write-Host "Copying StructureMap dll to $webRootPath\bin..." -NoNewline
+		Copy-Item $StructureMapDllLocation $webRootPath\bin
+		Write-Host "Done"
+	}
+	else
+	{
+		Write-Host "StructureMap dll already in $webRootPath\bin, good. Continuing"
+	}
 
-# Copy Global.asax
-Write-Host "Copying Global.asax to $webRootPath... " -NoNewline
-Copy-Item $globalAsax $webRootPath
-Write-Host "Done"
+	# Copy Global.asax
+	Write-Host "Copying Global.asax to $webRootPath... " -NoNewline
+	Copy-Item $globalAsax $webRootPath
+	Write-Host "Done copying Global.asax" -ForegroundColor Green
+}
 
 # TODO: Trigger index rebuild automatically -> Could be done with Sitecore Powershell extensions (remote) if they are installed. See 
 # http://blog.najmanowicz.com/2014/10/10/sitecore-powershell-extensions-remoting/ and 

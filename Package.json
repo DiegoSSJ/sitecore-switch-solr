@@ -23,9 +23,10 @@
     "require-dir": "^0.3.0",
     "rimraf": "^2.4.3",
     "run-sequence": "^1.1.5",
-    "shelljs": "^0.5.3"
+    "shelljs": "^0.5.3",
+	"yargs":"7.0.2"
   },
-  "description": "Sitecore switch to Solr. Based on Pentias builder",
+  "description": "Sitecore switch to Solr. ",
   "devDependencies": {},
   "directories": {},
   "keywords": [
@@ -53,5 +54,5 @@
   "scripts": {
     "gulp": "gulp"
   },
-  "version": "1.0.13"
+  "version": "2.0.0"
 }

@@ -24,7 +24,11 @@ gulp.task("sitecore-switch-to-solr", function (callback) {
   if(!path.isAbsolute(config.websiteRoot))
     websiteRoot = path.join(process.cwd(),config.websiteRoot);
 
-  powershell.runSync(psFile, " -webRootPath " + websiteRoot + " -solrExtractLocation " + config.solrExtractLocation, path.join(taskDir, "../powershell-scripts"), callback);
+  var sitecoreVersion = "8.2.161221"
+  if (build.sitecoreVersion )
+	  sitecoreVersion = build.sitecoreVersion
+
+  powershell.runSync(psFile, " -webRootPath " + websiteRoot + " -solrExtractLocation " + config.solrExtractLocation + " -sitecoreVersion " + sitecoreVersion, path.join(taskDir, "../powershell-scripts"), callback);
   
   build.logEvent("builder", "Sitecore switch to solr completed successfully, don't forget to rebuild indexes in Sitecores control panel");
   callback();
