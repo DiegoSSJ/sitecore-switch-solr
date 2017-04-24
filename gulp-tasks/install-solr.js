@@ -20,7 +20,7 @@ gulp.task("install-solr", function (callback) {
   var psFile = path.join(taskDir, "../powershell-scripts/install-solr.ps1");
   var installSolrPsArguments = " -solrExtractLocation " + config.solrExtractLocation;
   if ( config.asSolrCloud && config.solrCloudHosts && config.solrCloudThisHost )
-	  installSolrPsArguments += " -asSolrCloud -copySitecoreCores=$false -solrCloudHosts " + config.solrCloudHosts + " -solrCloudThisHost " + config.solrCloudThisHost;
+	  installSolrPsArguments += " -asSolrCloud $true -copySitecoreCores $false -solrCloudHosts " + config.solrCloudHosts + " -solrCloudThisHost " + config.solrCloudThisHost;
   if ( config.solrVersion )
 	  installSolrPsArguments  += " -solrVersion " + config.solrVersion;
   //var result = powershell.runSync(psFile, " -solrExtractLocation " + config.solrExtractLocation, path.join(taskDir, "../powershell-scripts"), callback);

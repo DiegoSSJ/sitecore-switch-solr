@@ -53,16 +53,17 @@ if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
     exit 1
 }
 
-if ( $asSolrCloud )
-{
-    if ( ($zookeeperExtractLocation -eq $null -or $zookeeperExtractLocation -eq "" -or (-not (Test-Path $zookeeperExtractLocation))) -or
-    ($zookeeperHostNr -eq $null -or $zookeeperHostNr -eq "" ) -or
-    ($zookeeperHosts -eq $null -or $zookeeperHosts -eq ""))
-    {
-        Write-Error "You specified Solr should be installed as a SolrCloud instance, but did not specified required parameters to install it. Check zookeeper parameters etc"
-        exit 1
-    }    
-}
+
+#if ( $asSolrCloud )
+#{
+#    if ( ($zookeeperExtractLocation -eq $null -or $zookeeperExtractLocation -eq "" -or (-not (Test-Path $zookeeperExtractLocation))) -or
+#    ($zookeeperHostNr -eq $null -or $zookeeperHostNr -eq "" ) -or
+#    ($zookeeperHosts -eq $null -or $zookeeperHosts -eq ""))
+#    {
+#        Write-Error "You specified Solr should be installed as a SolrCloud instance, but did not specified required parameters to install it. Check zookeeper parameters etc"
+#        exit 1
+#    }    
+#}
 
 $solrVersionName=$solrVersion
 #$solrExtractLocation="D:\"
