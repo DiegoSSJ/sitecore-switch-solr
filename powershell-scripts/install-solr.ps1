@@ -366,6 +366,24 @@ if($copySitecoreCores)
 
     if ($continue )
     {
+        $solrPath = "$solrExtractLocation\$solrExtractFolder"
+        Write-Debug "Will initialize solr-powershell module with solr path $solrPath"
+        Import-Module .\solr-powershell.psm1 -Force -ArgumentList @($solrPath) 
+        $version = Get-SolrVersion $solrPath           
+
+        if ( $version.major -ne 4 -and $version.major -ne 5 )
+        {
+            Write-Error "No support for Solr versions other than 4 or 5 for standalone"
+            exit 1
+        }
+
+        $solrCleanCores = $solrCleanCores4
+        $solrCoresPath = $solrCores4Path
+        if ( $version.major -eq 5 )
+        {
+            $solrCleanCores = $solrCleanCores5
+            $solrCores = $solrCores5Path
+        }
 
 	    if(-not (Test-Path $solrCleanCores))
 	    { 
@@ -373,24 +391,12 @@ if($copySitecoreCores)
 		    exit 1
 	    }
 
-    	Write-Host "Unpacking clean solr Sitecore cores" -ForegroundColor Cyan
+    	Write-Host "Unpacking clean solr Sitecore cores for version" $version.major "of Solr" -ForegroundColor Cyan
     	if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
     	{            
-            $solrPath = "$solrExtractLocation\$solrExtractFolder"
-            Write-Debug "Will initialize solr-powershell module with solr path $solrPath"
-            Import-Module .\solr-powershell.psm1 -Force -ArgumentList @($solrPath) 
-            $version = Get-SolrVersion $solrPath           
-
-            if ( $version.major -eq 4)
-		    {
-                Expand-Archive $solrCleanCores4 -DestinationPath $solrCores4Path
-            }
-            else
-            {
-                Expand-Archive $solrCleanCores5-DestinationPath $solrCores5Path
-            }
-
-    		if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
+            Expand-Archive $solrCleanCores -DestinationPath $solrCoresPath
+          
+            if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
     		{
     			Write-Host "Couldn't extract solr cores, check error messages and fix accordingly" -ForegroundColor Red
     			exit 1
