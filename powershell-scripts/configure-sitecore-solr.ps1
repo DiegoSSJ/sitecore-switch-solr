@@ -11,6 +11,8 @@
      The path where the Sitecore website is (should contain App_Config inside it)
 .PARAMETER sitecoreVersion
      The Sitecore version we are configuring to use Solr for. So that the process works for it. 
+.PARAMETER useRebuild
+     Switch to set if the index rebuild switch in Sitecore should be used. Default is false
 .EXAMPLE
     C:\PS> configure-sitecore-solr.ps1 -solrExtractLocation C:\solr -webRootPath C:\websites\Sitecore\Website
 .NOTES
@@ -24,7 +26,10 @@ param(
 	[Parameter(Mandatory=$true)]
     [string]$webRootPath,
     [Parameter(Mandatory=$true)]
-    [string]$sitecoreVersion="8.2")
+    [string]$sitecoreVersion="8.2",
+    [Parameter(Mandatory=$false)]
+    [string]$useRebuild=$false
+    )
 
 
 # Supported according to instructions on 
@@ -184,6 +189,9 @@ else
 
     ForEach ( $configFile in $solrConfigExampleFilesFound )
     {
+        if ( -not $useRebuild -and $configFile.Contains("SwitchOnRebuild"))
+        { continue }
+        
         $configFileEnabledName = $configFile -replace "[.]example",""
         # Rename-Item expects just the new name as second parameter, so we have to remove the relative path
         $configFileEnabledName = $configFileEnabledName -replace ".*\\",""
