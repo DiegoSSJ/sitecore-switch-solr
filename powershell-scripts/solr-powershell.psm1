@@ -97,7 +97,7 @@ Function Check-Collection-Exists {
 	)
 
     Write-Verbose "Checking if collection $collectionName exists"
-    if ( $solrVersion -gt 4 )
+    if ( $solrVersion.major -gt 4 )
     {
         Write-Debug "Checking collection on Solr 5+"
         $allArgs = $allArgs = @('healthcheck', '-c',$collectionName, '-z', $zkHost)
@@ -154,7 +154,7 @@ Function Create-Collection {
 
 
     Write-Debug "Creating collection $collectionName with configuration $configName for $shards shards and replication factor of $replicationFactor"
-    if ( $solrVersion -gt 4 )
+    if ( $solrVersion.major -gt 4 )
     {
         # Create collections via command line
         Write-Debug "Creating collection for a Solr instance newer or equal to version 5"
@@ -197,7 +197,7 @@ Function Delete-Collection {
 
     Write-Verbose "Deleting collection $collectionName"
     
-    if ( $solrVersion -gt 4 )
+    if ( $solrVersion.major -gt 4 )
     {
         Write-Debug "Deleting collection for a Solr instance running Solr version 5+"
         $solrExpression = $solrCmd + " delete " + " -c " + $collectionName
@@ -244,7 +244,7 @@ Function Create-Collection-Configuration {
         return
     }
 
-    if ( $solrVersion -gt 4 )
+    if ( $solrVersion.major -gt 4 )
     {
         Write-Debug "Creating configuration on a solr 5+ instance"
         # Create file-based dummy collection with new configuration
@@ -253,7 +253,7 @@ Function Create-Collection-Configuration {
         Invoke-Expression $solrExpression
 
         # Delete dummy collection
-        Write-DEbug "Erasing dummy collection"
+        Write-Debug "Erasing dummy collection"
         $solrExpression = $solrCmd + " delete -c dummy -deleteConfig=false"
         Invoke-Expression $solrExpression
 
@@ -283,4 +283,5 @@ Export-ModuleMember -Function Create-Collection
 Export-ModuleMember -Function Delete-Collection
 Export-ModuleMember -Function Check-Collection-Exists
 Export-ModuleMember -Function Get-SolrVersion
+Export-ModuleMember -Function Create-Collection-Configuration
 

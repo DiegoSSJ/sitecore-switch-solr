@@ -71,9 +71,9 @@ $filesLocation="..\files"
 $solrUrl="http://archive.apache.org/dist/lucene/solr/$solrVersionName/solr-$solrVersionName.zip"
 $solrExtractFolder="solr-$solrVersionName"
 $solrCleanCores4="$filesLocation\Clean SOLR 4 cores.zip"
-$solrCores4Path="$solrExtractLocation\$solrExtractFolder\example\solr"
+$solrCores4Path="\example\solr"
 $solrCleanCores5="$filesLocation\Clean SOLR 5 cores.zip"
-$solrCores5Path="$solrExtractLocation\$solrExtractFolder\server\solr"
+$solrCores5Path="\server\solr"
 $solrBinaryLocation="bin\solr.cmd"
 $solrServiceName=$serviceName
 $solrServiceDisplayName="LiU Sitecore Solr service instance"
@@ -378,11 +378,11 @@ if($copySitecoreCores)
         }
 
         $solrCleanCores = $solrCleanCores4
-        $solrCoresPath = $solrCores4Path
+        $solrCoresPath = "$solrPath\$solrCores4Path"
         if ( $version.major -eq 5 )
         {
             $solrCleanCores = $solrCleanCores5
-            $solrCores = $solrCores5Path
+            $solrCoresPath = "$solrPath\$solrCores5Path"
         }
 
 	    if(-not (Test-Path $solrCleanCores))
@@ -394,6 +394,7 @@ if($copySitecoreCores)
     	Write-Host "Unpacking clean solr Sitecore cores for version" $version.major "of Solr" -ForegroundColor Cyan
     	if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
     	{            
+            Write-Debug "Unpacking $solrCleanCores to $solrCoresPath"
             Expand-Archive $solrCleanCores -DestinationPath $solrCoresPath
           
             if(!(Test-Path "$solrCoresPath\sitecore_core_index"))
