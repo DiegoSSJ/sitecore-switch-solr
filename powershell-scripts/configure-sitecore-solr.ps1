@@ -28,7 +28,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$sitecoreVersion="8.2",
     [Parameter(Mandatory=$false)]
-    [string]$useRebuild=$false
+    [bool]$useRebuild=$false
     )
 
 
@@ -189,8 +189,21 @@ else
 
     ForEach ( $configFile in $solrConfigExampleFilesFound )
     {
-        if ( -not $useRebuild -and $configFile.Contains("SwitchOnRebuild"))
-        { continue }
+        if ( (-not $useRebuild) -and $configFile.Contains("SwitchOnRebuild"))
+        { 
+            Write-Host "Skipping SwitchOnRebuild due to useRebuild being false"
+            continue 
+        }
+        elseif ( $useRebuild -and $configFile.Contains("SwitchOnRebuild"))
+        {
+            $reply = Read-Host "Enabling SwitchOnRebuild Make sure you created the needed cores/collections (MainAlias/RebuildAlias/rebuild). Do you want to enable it? (Y/N)"
+            if ( $reply.ToUpper() -eq "N")
+            {
+                Write-Host "Skipping enabling SwitchOnRebuild"
+                continue
+            }
+        }
+        
         
         $configFileEnabledName = $configFile -replace "[.]example",""
         # Rename-Item expects just the new name as second parameter, so we have to remove the relative path
@@ -201,7 +214,8 @@ else
 
     $solrDisabledConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.disabled"
     $solrExampleConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.example"
-    if($solrDisabledConfigFilesFound.Count -gt 0  -and $solrExampleConfigFilesFound.Count -gt 0)
+    if($solrDisabledConfigFilesFound.Count -gt 0  -and 
+    (($useRebuild -and $solrExampleConfigFilesFound.Count -gt 0) -or (-not $useRebuild -and $solrExampleConfigFilesFound.Count -gt 1)))
     {
         Write-Host "Something went wrong enabling Solr config files, there are still some left disabled/exampled" -ForegroundColor Red
         exit 1
