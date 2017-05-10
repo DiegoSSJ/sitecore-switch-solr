@@ -1,4 +1,4 @@
-#Sitecore switch to Solr npm gulp package
+# Sitecore switch to Solr npm gulp package
 
 Provides gulp tasks for installation and configuration of both Solr and Sitecore to work with each other. 
 It supports several versions of Sitecore and Solr and can work with both Solr standalone and SolrCloud. 
@@ -9,7 +9,7 @@ Based on the great installation instructions from the sitecore community documen
 https://sitecore-community.github.io/docs/search/solr/fast-track-solr-for-lazy-developers/
 
 
-##Usage
+## Usage
 
 This npm package is intended to be included from a Sitecore Habitat project. It is included via package.json like this:
 
@@ -49,7 +49,7 @@ gulp sitecore-switch-to-solr
 ```
 
 
-##Gulp task parameters
+## Gulp task parameters
 
 The gulp tasks expects a minium of three parameters in the solution-config.json file. Two of these parameters go in the "configs" section, and are named "websiteRoot" and "solrExtractLocation" and the third go in the "sitecore" section and is called "version". For example:
 ```
@@ -106,6 +106,6 @@ Example of all configuration variables:
 }
 ```
  
- **Please note it is up to the user to match Sitecore version and Solr version accordingly. We only provide suitable cores for Solr 4 and Solr 5, plus collection configuration for Solr5. See https://kb.sitecore.net/articles/227897 ** 
+ ** Please note it is up to the user to match Sitecore version and Solr version accordingly. We only provide suitable cores for Solr 4 and Solr 5, plus collection configuration for Solr5. See https://kb.sitecore.net/articles/227897 ** 
  
  
