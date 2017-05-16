@@ -45,6 +45,7 @@ $supportedSitecoreVersions = "8.1", "8.2";
 #{
 #    return [System.Diagnostics.FileVersionInfo]::GetVersionInfo("$webRootPath\bin\Sitecore.Kernel.dll").FileVersion
 #}
+# Update 2017-05-11 it is easy: use sitecore.version.xml within sitecore/shell
 
 if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
 {
@@ -123,10 +124,20 @@ else
 {
     ForEach ( $configFile in $luceneConfigFilesFound )
     {
-        $configFileDisabledName = $configFile -replace "[.]config",".disabledbyscript"
+        $configFileDisabledName = $configFile -replace "[.]config",".disabledbyscript"       
+        $configFileDisabledNameOnly = $configFile -replace "[.]config",".disabledbyscript"       
         $configFileDisabledName = $configFileDisabledName -replace ".*\\",""
         Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileDisabledName"
-        Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileDisabledName
+        Write-Host "checking if $websiteAppConfigIncludeFolder\$configFileDisabledNameOnly already exists"
+        if ( Test-Path $websiteAppConfigIncludeFolder\$configFileDisabledNameOnly)
+        {
+            Write-Host "Renamed file already exist, deleting original instead"
+            rm $websiteAppConfigIncludeFolder\$configFile
+        }
+        else
+        {
+            Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileDisabledName
+        }
     }
 
     $luceneConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Lucene*.config"
@@ -181,10 +192,19 @@ else
     ForEach ( $configFile in $solrConfigDisabledFilesFound )
     {
         $configFileEnabledName = $configFile -replace "[.]config[.]disabled",".config"
-        # Renama-Item expects just the new name as second parameter, so we have to remove the relative path
+        $configFileEnabledNameOnly = $configFile -replace "[.]config[.]disabled",".config"
+        # Rename-Item expects just the new name as second parameter, so we have to remove the relative path
         $configFileEnabledName = $configFileEnabledName -replace ".*\\",""
-        Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileEnabledName"
-        Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileEnabledName
+        if ( -not ( Test-Path $websiteAppConfigIncludeFolder\$configFileEnabledNameOnly ))
+        {
+            Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileEnabledName"
+            Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileEnabledName
+        }
+        else 
+        {
+            Write-host "File is already enabled, deleting disabled instead ($websiteAppConfigIncludeFolder\$configFileEnabledNameOnly)"
+            Remove-Item $websiteAppConfigIncludeFolder\$configFileEnabledNameOnly
+        }
     }
 
     ForEach ( $configFile in $solrConfigExampleFilesFound )
@@ -206,10 +226,21 @@ else
         
         
         $configFileEnabledName = $configFile -replace "[.]example",""
+        $configFileEnabledNameOnly = $configFile -replace "[.]example",""
         # Rename-Item expects just the new name as second parameter, so we have to remove the relative path
         $configFileEnabledName = $configFileEnabledName -replace ".*\\",""
-        Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileEnabledName"
-        Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileEnabledName
+
+        if ( -not ( Test-Path $websiteAppConfigIncludeFolder\$configFileEnabledNameOnly ))
+        {
+            Write-Host "Renaming $websiteAppConfigIncludeFolder\$configFile to $configFileEnabledName"
+            Rename-Item $websiteAppConfigIncludeFolder\$configFile $configFileEnabledName
+        }
+        else 
+        {
+            Write-host "File is already enabled, deleting example ($websiteAppConfigIncludeFolder\$configFileEnabledNameOnly)"
+            Remove-Item $websiteAppConfigIncludeFolder\$configFileEnabledNameOnly
+        }
+
     }
 
     $solrDisabledConfigFilesFound = Get-ChildItem $websiteAppConfigIncludeFolder -name -rec -filter "*Solr*.config.disabled"
