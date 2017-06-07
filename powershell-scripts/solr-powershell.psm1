@@ -242,10 +242,16 @@ Function Create-Collection-Configuration {
     {
         Write-Error "Path to configuration ($configurationPath) does not exist, quitting"
         return
-    }
+    }    
 
     if ( $solrVersion.major -gt 4 )
     {
+        if ( [System.IO.Path]::IsPathRooted($configurationPath))
+        {
+            Write-Error "Path to configuration ($configurationPath) is relative, this won't work on Solr 5 or newer"
+            return
+        }
+
         Write-Debug "Creating configuration on a solr 5+ instance"
         # Create file-based dummy collection with new configuration
         Write-Debug "Creating configuration by creating a dummy collection"
@@ -279,9 +285,47 @@ Function Create-Collection-Configuration {
 }
 
 
+Function Delete-Collection-Configuration {
+    Param(
+	    [Parameter(Mandatory=$True)]
+    	[string]$configurationName,
+        [bool]$forceDelete=$false,        
+        [string]$port=""
+    	)
+
+    Write-Verbose "Deleting collection configuration $configurationName"   
+
+    if ( $solrVersion.major -gt 4 )
+    {
+        Write-Debug "Deleging configuration on a solr 5+ instance"
+        # Create file-based dummy collection with new configuration
+        Write-Debug "Deleting configuration by creating a dummy collection"
+        $solrExpression = $solrCmd + " create_collection " + " -c dummy -n " + $configurationName
+        Invoke-Expression $solrExpression
+
+        # Delete dummy collection
+        Write-Debug "Erasing dummy collection"
+        $solrExpression = $solrCmd + " delete -c dummy -deleteConfig=true"
+        if ( $forceDelete )
+        {
+            $solrExpression += " -forceDeleteConfig true "
+        }
+        Invoke-Expression $solrExpression
+
+        Write-Debug "Finished"
+    }
+    else
+    {
+        Write-Debug "Deleting configuration on a solr 4 instance"
+        Write-Error "Deleting configuration is not supported for Solr 4"
+    }    
+}
+
+
 Export-ModuleMember -Function Create-Collection
 Export-ModuleMember -Function Delete-Collection
 Export-ModuleMember -Function Check-Collection-Exists
 Export-ModuleMember -Function Get-SolrVersion
 Export-ModuleMember -Function Create-Collection-Configuration
+Export-ModuleMember -Function Delete-Collection-Configuration
 

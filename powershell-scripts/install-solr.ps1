@@ -17,7 +17,9 @@
 .PARAMETER solrCloudThisHost
     String with the hostname that this instance of solrcloud resides on. No need to include port.
 .PARAMETER copySitecoreCores
-    Boolean specified if Sitecore cores should be copied to the solr installation. 
+    Boolean specifing if Sitecore cores should be copied to the solr installation. 
+.PARAMETER useRebuild
+    Boolean specifing if cores/collections to create should include rebuild ones. The name will be _rebuild for these, and only on indexes master,web and core. 
 .EXAMPLE
     C:\PS> install-solr.ps1 -solrExtractLocation C:\solr -solrVersion "5.2.0" -serviceName "Solr" -copySitecoreCores $false
 .NOTES
@@ -36,13 +38,14 @@ param(
     [bool]$asSolrCloud=$false,
     [string]$solrCloudHosts="",
     [string]$solrCloudThisHost="",
+    [bool]$useRebuild=$false,
     [string]$solrCloudConfName="sitecoreconf",
     #[string]$zookeeperExtractLocation,
     #[string]$zookeeperVersion,
     #[string]$zookeeperServiceName,
     #[string]$zookeeperHostNr,
     #[string]$zookeeperHosts,
-
+    [bool]$createSitecoreCollections=$false,
     [bool]$copySitecoreCores=$true)
 
 
@@ -87,6 +90,8 @@ $nssmLocalPath="$nssmName"
 $nssmSolrPath="$solrBinaryFolder\$nssmName"
 $sevenZipBinaryLocation='C:\Program Files\7-Zip\7z.exe'
 $sevenZipArguments=' x ' 
+$rebuildIndexes="master","web","core"
+$rebuildSuffix="_rebuild"
 
 
 $tempdir = Get-Location
@@ -419,7 +424,14 @@ if($copySitecoreCores)
 		    Write-Host "Solr cores already installed in $solrCoresPath" -ForegroundColor Green
 	    }
 
-        
+        if ( $useRebuild)
+        {
+            foreach ($indexName in $rebuildIndexes)
+            {
+                # Copy the core 
+                copy $solrCoresPath\sitecore_core_index $solrCoresPath\sitecore_${indexName}_index$rebuildSuffix
+            }           
+        }        
     }
 }
 
@@ -445,7 +457,7 @@ if ( $createSitecoreCollections )
             $replicationFactor = $solrCloudHosts.Split(",").Count
         }        
 
-        .\sitecore-solr-cores-creation.ps1 -command create -solrPath $solrExtractLocation\$solrExtractFolder -configName $solrCloudConfName -shards 1 -replicationFactor $replicationFactor 
+        .\sitecore-solr-cores-creation.ps1 -command create -solrPath $solrExtractLocation\$solrExtractFolder -configName $solrCloudConfName -shards 1 -replicationFactor $replicationFactor -useRebuild $useRebuild
     }
 
 }

@@ -28,7 +28,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$sitecoreVersion="8.2",
     [Parameter(Mandatory=$false)]
-    [bool]$useRebuild=$false
+    [bool]$useRebuild=$false,
+    #[bool]$useAutomaticRebuildCollectionCreation=$false # Doesn't seem to work in Sitecore 8.2rev2 yet
     )
 
 
@@ -222,6 +223,14 @@ else
                 Write-Host "Skipping enabling SwitchOnRebuild"
                 continue
             }
+
+            # Not tested and EnforceAliasCreation setting doesn't seem to work, at least in Sitecore 8.2rev2
+            #if ( $useAutomaticRebuildCollectionCreation )
+            #{
+            #       [xml]$XmlDocument = Get-Content -Path  $websiteAppConfigIncludeFolder\$configFile
+            #       $XmlDocument.ForEach( { if ( $_.name -match "EnforceAliasCreation" ) { $_.value = "true" } } )
+            #       $XmlDocument.Save($websiteAppConfigIncludeFolder+"\"+$configFile)
+            #}
         }
         
         

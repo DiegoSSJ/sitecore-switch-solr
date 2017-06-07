@@ -8,8 +8,12 @@
     What to perform, create or delete Sitecore collections.   
 .PARAMETER solrPath
     Path to the solr installation
-.PARAMETER setupCores
-    
+.PARAMETER useRebuild
+    Do create rebuild collections. Suffix for these will be in parameter $rebuildSuffix
+.PARAMETER rebuildSuffixes
+    The different suffixes to add to the name for the rebuild collections. Default is "_rebuild", "MainAlias", "RebuildAlias"
+.PARAMETER rebuildCollections
+    The collections for which to create a rebuild version
 .PARAMETER configName
     Name of the core/collection configuration name. You can create this configuration by using the sitecore-config-creator.ps1 script. 
 .PARAMETER shards
@@ -31,7 +35,11 @@ param(
     [string]$solrPath,      # The path to the solr installation. We expect bin\solr.cmd to be there (for Sitecore 5+)
     [Parameter(Mandatory=$true)]
     [string]$configName,            # The configuration name to use for the cores/collections
+    [string]$configPath="..\files\sitecore-collection-conf-solr-5",
     [string]$shards="1",
+    [bool]$useRebuild=$false,
+    [object]$rebuildSuffixes=@("_rebuild","MainAlias","RebuildAlias"),
+    [object]$rebuildCollections=@("sitecore_master_index","sitecore_web_index","sitecore_core_index"),
     [string]$replicationFactor="3")
         
     
@@ -61,14 +69,9 @@ Import-Module .\solr-powershell.psm1 -Force -ArgumentList @($solrPath)
 Function Create-Sitecore-Collections {
     Write-Host "Creating Sitecore Collections" -ForegroundColor Cyan
 
-    #if ( Check-Collection-Exists -collectionName "sitecore_core_index" )
-    #{
-    #    Write-Host "Sitecore collections already exist, skipping creation"
-    #    return
-    #}
-
     Write-Host "Creating Sitecore collection configuration" -ForegroundColor Cyan
-
+    $configPath = Resolve-Path $configPath # Has to be an absolute path
+    Create-Collection-Configuration -configName $configName -configurationPath $configPath 
 
     foreach ($collectionName in $sitecore_collection_names)
     {        
@@ -122,9 +125,20 @@ Function Delete-Sitecore-Collections {
 }
 
 
+if ( $useRebuild )
+{
+    foreach ( $rebuildCollection in $rebuildCollections)
+    {
+        foreach( $rebuildSuffix in $rebuildSuffixes)
+        {
+            $sitecore_collection_names += $rebuildCollection + $rebuildSuffix
+        }
+    }
+}
+
 
 if ( $command -eq "create" )
-{   
+{      
    Create-Sitecore-Collections
 }
 if ( $command -eq "delete" )

@@ -15,7 +15,7 @@ This npm package is intended to be included from a Sitecore Habitat project. It 
 
 ```
   "dependencies": {    
-    "sitecore-switch-solr": "^2.0.1"
+    "sitecore-switch-solr": "^2.1.0"
   }
 ```
 
