@@ -28,7 +28,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$sitecoreVersion="8.2",
     [Parameter(Mandatory=$false)]
-    [bool]$useRebuild=$false,
+    [bool]$useRebuild=$false
     #[bool]$useAutomaticRebuildCollectionCreation=$false # Doesn't seem to work in Sitecore 8.2rev2 yet
     )
 
