@@ -71,7 +71,7 @@ Function Create-Sitecore-Collections {
 
     Write-Host "Creating Sitecore collection configuration" -ForegroundColor Cyan
     $configPath = Resolve-Path $configPath # Has to be an absolute path
-    Create-Collection-Configuration -configName $configName -configurationPath $configPath 
+    Create-Collection-Configuration -configurationName $configName -configurationPath $configPath 
 
     foreach ($collectionName in $sitecore_collection_names)
     {        
@@ -121,6 +121,7 @@ Function Delete-Sitecore-Collections {
         #    Create-Collection -collectionName $collectionName -confdir "sitecoreconf" -
         #}
     }
+
     Write-Host "Finished deleting Sitecore collections" -ForegroundColor Green
 }
 

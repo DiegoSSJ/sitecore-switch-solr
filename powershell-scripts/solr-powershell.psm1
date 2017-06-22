@@ -246,7 +246,7 @@ Function Create-Collection-Configuration {
 
     if ( $solrVersion.major -gt 4 )
     {
-        if ( [System.IO.Path]::IsPathRooted($configurationPath))
+        if ( -not [System.IO.Path]::IsPathRooted($configurationPath))
         {
             Write-Error "Path to configuration ($configurationPath) is relative, this won't work on Solr 5 or newer"
             return
