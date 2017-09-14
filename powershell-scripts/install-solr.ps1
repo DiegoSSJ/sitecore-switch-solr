@@ -20,6 +20,11 @@
     Boolean specifing if Sitecore cores should be copied to the solr installation. 
 .PARAMETER useRebuild
     Boolean specifing if cores/collections to create should include rebuild ones. The name will be _rebuild for these, and only on indexes master,web and core. 
+.PARAMETER extraSitecoreCollections
+    String containing the names of additional collections to create, 
+.PARAMETER extraSitecoreCores
+    String containing the names of additional cores to create. Optionally, the name can contain an | separating the core name and the physical disk path to copy the configuration from 
+    or url to download zip package containing the configuration. The zip file should contain the conf folder directly, not any other upper folders. 
 .EXAMPLE
     C:\PS> install-solr.ps1 -solrExtractLocation C:\solr -solrVersion "5.2.0" -serviceName "Solr" -copySitecoreCores $false
 .NOTES
@@ -40,15 +45,17 @@ param(
     [string]$solrCloudThisHost="",
     [bool]$useRebuild=$false,
     [string]$solrCloudConfName="sitecoreconf",
+    [bool]$doNotCheckInstalled=$false,
+    [string]$solrPort="8983",
     #[string]$zookeeperExtractLocation,
     #[string]$zookeeperVersion,
     #[string]$zookeeperServiceName,
     #[string]$zookeeperHostNr,
     #[string]$zookeeperHosts,
     [bool]$createSitecoreCollections=$false,
-    [bool]$copySitecoreCores=$true)
-
-
+    [array]$extraSitecoreCollections,
+    [bool]$copySitecoreCores=$true,
+    [array]$extraSitecoreCores)
 
 if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
 {
@@ -69,6 +76,7 @@ if ($solrExtractLocation -eq $null -or $solrExtractLocation -eq "")
 #}
 
 $solrVersionName=$solrVersion
+$solrStandardPort="8983"
 #$solrExtractLocation="D:\"
 $filesLocation="..\files"
 $solrUrl="http://archive.apache.org/dist/lucene/solr/$solrVersionName/solr-$solrVersionName.zip"
@@ -83,7 +91,7 @@ $solrServiceDisplayName="LiU Sitecore Solr service instance"
 $solrServiceDescription="This is the solr service for the LiU implementation of Sitecore. Used by developers on local machines"
 $serviceStartupWaitTime=30
 $serviceStopWaitTime=20
-$solrCheckUrl="http://127.0.0.1:8983/solr"
+$solrCheckUrl="http://127.0.0.1:$solrPort/solr"
 $solrBinaryFolder="$solrExtractLocation\$solrExtractFolder\bin\"
 $nssmName="nssm.exe"
 $nssmLocalPath="$nssmName"
@@ -93,12 +101,38 @@ $sevenZipArguments=' x '
 $rebuildIndexes="master","web","core"
 $rebuildSuffix="_rebuild"
 
+# automatically get replication factor from host list     
+$replicationFactor = 1
+if ( $solrCloudHosts.Contains(","))
+{
+    $replicationFactor = $solrCloudHosts.Split(",").Count
+}        
 
 $tempdir = Get-Location
 $tempdir = $tempdir.tostring()
 $appToMatch = '*Java*'
 #$msiFile = $tempdir+"\microsoft.interopformsredist.msi"
 #$msiArgs = "-qb"
+
+
+Function Install-ExtraCores
+{
+    Param ( 
+        [Parameter(Mandatory)]
+        [array]$extraSitecoreCores,
+        [Parameter(Mandatory)]
+        [string]$solrCoresPath
+        )
+              
+        $newCoresInstalled = $false       
+        if ( $extraSitecoreCores -eq $null -or $extraSitecoreCores.Count -eq 0 )
+        {
+            Write-Error "No extra sitecore cores to install"
+        }       
+        foreach ($core in $extraSitecoreCores )
+        {            $coreConfPath = ""            if ( $core.Contains("|"))            {                $coreConfPath = $core.split("|")[1]                $core = $core.split("|")[0]            }            Write-Host "Checking if core $core already exists" -ForegroundColor Cyan                        if ((Test-Path $solrCoresPath\$core))            {                Write-Host "Core $core already present at $solrCoresPath\$core" -ForegroundColor Green                continue            }            if ( $coreConfPath -ne "")            {                                if ( !(Test-Path $coreConfPath ))                {                    Write-Verbose "Configuration at $coreConfPath not found as physical path, trying to download instead"                    $result = wget $coreConfPath                    if ($result -ne $null -and $result.StatusCode -eq 200)                    {                        # The configuration is on a zip file to be downloaded, download it to temp and uncompress and set the path to that place                        Write-Verbose "Downloading configuration from $coreConfPath"                        if ( Test-Path "$env:temp\conf.zip" )                        {                            rm "$env:temp\conf.zip"                         }                        if ( Test-Path "$env:temp\ExtraSitecoreSolrConf" )                        {                            rm -Recurse "$env:temp\ExtraSitecoreSolrConf"                        }                        $confZipPath = "$env:temp\conf.zip"                         wget $coreConfPath -OutFile $confZipPath                                                Expand-Archive $confZipPath -DestinationPath "$env:temp\ExtraSitecoreSolrConf"                        $coreConfPath = "$env:temp\ExtraSitecoreSolrConf"                                            }                    else                    {                        Write-Error "Wrong core configuration path of $coreConfPath, won't create core $core"                        continue                    }                }            }            if ( $coreConfPath.Equals(""))            {                $coreConfPath = $solrCoresPath + "\sitecore_core_index";            }                                       Write-Host "Creating extra core $core from configuration at $coreConfPath" -ForegroundColor Green            cp -Recurse $coreConfPath $solrCoresPath\$core            Set-Content -Path "$solrCoresPath\$core\core.properties" -Value "name=$core"             $newCoresInstalled  = $true       }
+       return $newCoresInstalled
+}
 
 function Get-InstalledApps
 {
@@ -125,51 +159,82 @@ function Test-Administrator
 
 
 # Dummy check if solr is already running 
-Write-Host "Checking if Solr is already installed" -ForegroundColor Cyan
-$isSolrServiceInstalled = Get-Service | Where-Object {$_.Name -like "*solr*"}
-if ( -not ($isSolrServiceInstalled -eq $null)) 
+if ( -not $doNotCheckInstalled )
 {
-    # Test if upgrading
-    Write-Host "Solr is already installed as service named" $isSolrServiceInstalled.Name -ForegroundColor Cyan
-
-    # Get Solr location from service via nssm, to be able to check version
-    $allArgs = @('get', $isSolrServiceInstalled.Name, 'Application')
-    $nssmLocalCmd = ".\" + $nssmName
-    $solrPath = & $nssmLocalCmd $allArgs
-    $solrPath= ($solrPath -replace [char] 0, "")[0] # Nssm returns some weird string with 0 coded chars (not spaces, even though they look like them)
-    Write-Debug "Solr service is running application at $solrPath"
-
-    if(Test-Path $solrPath)
+    Write-Host "Checking if Solr is already installed" -ForegroundColor Cyan
+    $isSolrServiceInstalled = Get-Service | Where-Object {$_.Name -like "*solr*"}
+    if ( -not ($isSolrServiceInstalled -eq $null)) 
     {
-        $solrPath = $solrPath.Replace("\bin\solr.cmd", "")
-        Write-Debug "Will initialize solr-powershell module with solr path $solrPath"
-        Import-Module .\solr-powershell.psm1 -Force -ArgumentList @($solrPath) 
-        $version = Get-SolrVersion $solrPath        $versionString = $version.major.ToString() + "." + $version.minor.ToString() + "." + $version.revision.ToString()
-        if ( $versionString -ne $solrVersion)
+        # Test if upgrading
+        Write-Host "Solr is already installed as service named" $isSolrServiceInstalled.Name -ForegroundColor Cyan
+
+        # Get Solr location from service via nssm, to be able to check version
+        $allArgs = @('get', $isSolrServiceInstalled.Name, 'Application')
+        $nssmLocalCmd = ".\" + $nssmName
+        $solrPath = & $nssmLocalCmd $allArgs
+        $solrPath= ($solrPath -replace [char] 0, "")[0] # Nssm returns some weird string with 0 coded chars (not spaces, even though they look like them)
+        Write-Debug "Solr service is running application at $solrPath"
+
+        if(Test-Path $solrPath)
         {
-            Write-Host "Proceeding to change Solr version from $versionString to $solrVersion" -ForegroundColor Yellow
-            Write-Host "Uninstalling version $solrVersion" -ForegroundColor Cyan
-            .\uninstall-solr.ps1 -solrExtractLocation $solrPath -solrServiceName $isSolrServiceInstalled.Name
+            $solrPath = $solrPath.Replace("\bin\solr.cmd", "")
+            Write-Debug "Will initialize solr-powershell module with solr path $solrPath"
+            Import-Module .\solr-powershell.psm1 -Force -ArgumentList @($solrPath) 
+            $version = Get-SolrVersion $solrPath            $versionString = $version.major.ToString() + "." + $version.minor.ToString() + "." + $version.revision.ToString()
+            if ( $versionString -ne $solrVersion)
+            {
+                Write-Host "Proceeding to change Solr version from $versionString to $solrVersion" -ForegroundColor Yellow
+                Write-Host "Uninstalling version $solrVersion" -ForegroundColor Cyan
+                .\uninstall-solr.ps1 -solrExtractLocation $solrPath -solrServiceName $isSolrServiceInstalled.Name
+            }
+            else
+            {
+                # Solr already installed in some way
+                Write-Host "Solr is already available as a service ("$isSolrServiceInstalled.Name") installed at $solrPath and running version $versionString, you probably have already installed it correctly" -ForegroundColor Green
+
+
+                # Check for Solr Cloud / cores and setup accordinly
+                if ( $createSitecoreCollections )
+                {
+                    .\sitecore-solr-cores-creation.ps1 -command create -solrPath $solrExtractLocation\$solrExtractFolder -configName $solrCloudConfName -shards 1 -replicationFactor $replicationFactor -useRebuild $useRebuild -extraCollectionNames $extraSitecoreCollections
+                }
+
+                if ( $copySitecoreCores -and $extraSitecoreCores.Count -gt 0)
+                {
+                    Write-Host "Checking extra cores are present" -ForegroundColor Cyan
+                    $solrCoresPath = "$solrPath\$solrCores4Path"
+                    if ( $version.major -eq 5 )
+                    {           
+                        $solrCoresPath = "$solrPath\$solrCores5Path"
+                    }
+
+                    $newCoresInstalled = Install-ExtraCores -extraSitecoreCores $extraSitecoreCores -solrCoresPath $solrCoresPath
+
+
+                    if ( $newCoresInstalled)
+                    {
+                        # Restart to make cores available for use
+                        Write-Host "New cores were installed, restarting Solr" -ForegroundColor Cyan
+                        Stop-Service -Name $isSolrServiceInstalled.Name                        Start-Sleep 5
+                        Start-Service -Name $isSolrServiceInstalled.Name
+                        Write-Host "Done restarting Solr, new cores installed" -ForegroundColor Cyan
+                    }
+                }
+
+                    
+                # Check if running / Check if our Liu service exists?
+                #$isLiUSolrServiceRunning = Get-Service -Name $solrServiceName
+                #if ( $isLiUSolrServiceRunning.Status -eq "Running")
+                exit 0
+            }
+
+
         }
         else
         {
-            # Solr already installed in some way
-            Write-Host "Solr is already available as a service ("$isSolrServiceInstalled.Name") installed at $solrPath and running version $versionString, you probably have already installed it correctly" -ForegroundColor Green
-
-            # Check if running / Check if our Liu service exists?
-            #$isLiUSolrServiceRunning = Get-Service -Name $solrServiceName
-            #if ( $isLiUSolrServiceRunning.Status -eq "Running")
-            exit 0
+            # Solr already installed in some way, but not correctly?
+            Write-Host "Solr is already available as a service, but the location $solrPath pointed out by the service is missing. Will install it again" -ForegroundColor Yellow
         }
-
-        # Check for Solr Cloud / cores and setup accordinly
-
-
-    }
-    else
-    {
-        # Solr already installed in some way, but not correctly?
-        Write-Host "Solr is already available as a service, but the location $solrPath pointed out by the service is missing. Will install it again" -ForegroundColor Yellow
     }
 }
 
@@ -308,6 +373,11 @@ Write-Host "Setting up Solr as a service" -ForegroundColor Cyan
 #Invoke-Command -ScriptBlock $nssmChangeAppDirectory 
 
 $startupParams = "start -f"
+if ( $solrPort -ne $solrStandardPort )
+{
+    Write-Host "Setting port for Solr service startup params to $solrPort as it is not the standard port ($solrStandardPort)"
+    $startupParams += " -p $solrPort"
+}
 if ( $asSolrCloud )
 {    
     $reply = Read-Host -Prompt "Setting up Solr service for use with Solr Cloud. Be sure you have installed zookeeper properly, as in, installed and running on ALL instances that will conform the SolrCloud ensemble. Otherwise Solr will no be able to start up. Continue? (Y/N)"
@@ -408,6 +478,12 @@ if($copySitecoreCores)
     			exit 1
     		}
 
+            if( $extraSitecoreCores -ne $null -and $extraSitecoreCores.Count -gt 0)
+            {
+                Write-Host "Installing extra cores" -ForegroundColor Cyan
+                Install-ExtraCores -extraSitecoreCores $extraSitecoreCores -solrCoresPath $solrCoresPath
+            }
+
 		    Write-Host "Correctly unpacked Sitecore solr cores" -ForegroundColor Green
 
 
@@ -450,13 +526,6 @@ if ( $createSitecoreCollections )
 
     if ($continue)
     {   
-        # automatically get replication factor from host list     
-        $replicationFactor = 1
-        if ( $solrCloudHosts.Contains(","))
-        {
-            $replicationFactor = $solrCloudHosts.Split(",").Count
-        }        
-
         .\sitecore-solr-cores-creation.ps1 -command create -solrPath $solrExtractLocation\$solrExtractFolder -configName $solrCloudConfName -shards 1 -replicationFactor $replicationFactor -useRebuild $useRebuild
     }
 

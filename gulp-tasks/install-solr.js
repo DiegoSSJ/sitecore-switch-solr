@@ -23,6 +23,10 @@ gulp.task("install-solr", function (callback) {
 	  installSolrPsArguments += " -asSolrCloud $true -copySitecoreCores $false -solrCloudHosts " + config.solrCloudHosts + " -solrCloudThisHost " + config.solrCloudThisHost;
   if ( config.solrVersion )
 	  installSolrPsArguments  += " -solrVersion " + config.solrVersion;
+  if ( config.solrInstallRawArguments )
+	  installSolrPsArguments  += config.solrInstallRawArguments;
+  build.logEvent("builder", "Running install solr with parameters: " + installSolrPsArguments)
+  
   //var result = powershell.runSync(psFile, " -solrExtractLocation " + config.solrExtractLocation, path.join(taskDir, "../powershell-scripts"), callback);
   var result = powershell.runSync(psFile, installSolrPsArguments, path.join(taskDir, "../powershell-scripts"), callback);
   if (result > 0 )

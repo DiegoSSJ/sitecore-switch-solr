@@ -15,7 +15,7 @@ This npm package is intended to be included from a Sitecore Habitat project. It 
 
 ```
   "dependencies": {    
-    "sitecore-switch-solr": "^2.1.0"
+    "sitecore-switch-solr": "^2.2.1"
   }
 ```
 
@@ -81,6 +81,7 @@ configs -> config
 	-> asSolrcloud: Install Solr ready to be used as a Solr Cloud instance. Creates configuration and collections. You have to specify solrCloudHosts and solrCloudThisHost for this to work. The content doesn't matter, it should just be set to something.
 	-> solrCloudHosts: List of Solr instances that will conform the SolrCloud ensemble. The list should be comma separated and include only hostname with port. See example below
 	-> solrCloudThishost: The hostname for the host that is actually being configured. No need to specify port. 
+	-> solrInstallRawArguments: Strings with arguments to pass to the solr install powershell script as is. 
 ```
 
 Example of all configuration variables:
@@ -101,6 +102,7 @@ Example of all configuration variables:
       "asSolrCloud": "yes",
       "solrCloudHosts": "hostname1:2181,hostname2:2181"
       "solrCloudThisHost": "hostname1"
+	  "solrInstallRawArguments": " -copySitecorecores $true -extraSitecoreCores @('ourCore') "
     }
   ]
 }

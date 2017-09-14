@@ -40,7 +40,9 @@ param(
     [bool]$useRebuild=$false,
     [object]$rebuildSuffixes=@("_rebuild","MainAlias","RebuildAlias"),
     [object]$rebuildCollections=@("sitecore_master_index","sitecore_web_index","sitecore_core_index"),
-    [string]$replicationFactor="3")
+    [string]$replicationFactor="3",
+    [array]$extraCollectionNames
+    )
         
     
 $sitecore_collection_names=
@@ -59,6 +61,8 @@ $sitecore_collection_names=
 "sitecore_marketingdefinitions_web",
 "social_messages_master",
 "social_messages_web"
+
+$sitecore_collection_names = $sitecore_collection_names + $extraCollectionNames
 
 
 $ErrorActionPreference = "stop"
