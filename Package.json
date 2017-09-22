@@ -3,6 +3,7 @@
     "name": "Diego Saavedra San Juan",
     "email": "diego.saavedra.san.juan@liu.se"
   },
+  "homepage": "https://github.com/diegossj/sitecore-switch-solr",
   "bugs": {
     "url": "https://github.com/diegossj/sitecore-switch-solr/issues"
   },
@@ -54,5 +55,5 @@
   "scripts": {
     "gulp": "gulp"
   },
-  "version": "2.2.1"
+  "version": "2.2.2"
 }
