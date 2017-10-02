@@ -53,7 +53,7 @@ param(
     #[string]$zookeeperHostNr,
     #[string]$zookeeperHosts,
     [bool]$createSitecoreCollections=$false,
-    [array]$extraSitecoreCollections,
+    [array]$extraSitecoreCollections=@(),
     [bool]$copySitecoreCores=$true,
     [array]$extraSitecoreCores)
 
@@ -526,7 +526,7 @@ if ( $createSitecoreCollections )
 
     if ($continue)
     {   
-        .\sitecore-solr-cores-creation.ps1 -command create -solrPath $solrExtractLocation\$solrExtractFolder -configName $solrCloudConfName -shards 1 -replicationFactor $replicationFactor -useRebuild $useRebuild
+        .\sitecore-solr-cores-creation.ps1 -command create -solrPath $solrExtractLocation\$solrExtractFolder -configName $solrCloudConfName -shards 1 -replicationFactor $replicationFactor -useRebuild $useRebuild -extraCollectionNames $extraSitecoreCollections
     }
 
 }

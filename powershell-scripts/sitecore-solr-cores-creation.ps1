@@ -41,7 +41,7 @@ param(
     [object]$rebuildSuffixes=@("_rebuild","MainAlias","RebuildAlias"),
     [object]$rebuildCollections=@("sitecore_master_index","sitecore_web_index","sitecore_core_index"),
     [string]$replicationFactor="3",
-    [array]$extraCollectionNames
+    [array]$extraCollectionNames=@()
     )
         
     
